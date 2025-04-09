@@ -6,5 +6,6 @@
     <string name="share_app">Поделиться приложением</string>
     <string name="write_to_support">Написать в поддержку</string>
     <string name="EULA">Пользовательское соглашение</string>
+    <string name="dark_theme">Тёмная тема</string>
 
 </resources>

@@ -9,21 +9,22 @@
     android:background="@color/YP_Blue"
     tools:context=".MainActivity">
 
-    <TextView
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/title_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="56dp"
-        android:paddingStart="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="10dp"
-        android:text="@string/app_name"
-        android:textColor="@color/YP_White"
-        android:textSize="@dimen/default_tittle_size"
-        tools:ignore="RtlSymmetry" />
+        android:background="@color/YP_Blue"
+        app:title="@string/app_name"
+        app:titleTextColor="@color/YP_White"
+        app:titleTextAppearance="@style/ToolbarTitleStyle"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/default_space"/>
 
     <Button
         android:id="@+id/search_button"
-        android:layout_marginTop="24dp"
         style="@style/TittleButtonStyle"
         android:text="@string/search"
         app:icon="@drawable/ic_search" />
