@@ -26,6 +26,8 @@
         android:layout_height="@dimen/default_button_height"
         android:text="@string/dark_theme"
         android:gravity="center_vertical"
+        app:thumbTint="@color/switch_thumb_color"
+        app:trackTint="@color/switch_track_color"
         style="@style/SettingsButtonStyle"/>
 
     <com.google.android.material.textview.MaterialTextView
