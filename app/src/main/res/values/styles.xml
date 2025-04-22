@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <style name="TittleButtonStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+        <item name="android:layout_marginHorizontal">@dimen/default_padding</item>
+        <item name="android:textColor">@color/YP_Black</item>
+        <item name="android:backgroundTint">@color/YP_White</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconTint">@color/YP_Black</item>
+        <item name="android:drawablePadding">10dp</item>
+    </style>
+
+    <style name="SettingsButtonStyle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/YP_Black</item>
+        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:paddingVertical">20dp</item>
+    </style>
+
+    <style name="ToolbarTitleStyle">
+        <item name="android:textSize">@dimen/default_tittle_size</item>
+        <item name="paddingStart">16dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:textStyle">bold</item>
+
+    </style>
+
+
+
+</resources>

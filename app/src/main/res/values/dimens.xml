@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="default_padding">16dp</dimen>
+    <dimen name="default_icon_size">24dp</dimen>
+    <dimen name="default_tittle_size">22sp</dimen>
+    <dimen name="default_paddingStart">16dp</dimen>
+    <dimen name="nav_bar_text_size">12sp</dimen>
+    <dimen name="default_paddingTop">12dp</dimen>
+    <dimen name="default_paddingBottom">12dp</dimen>
+    <dimen name="default_text_size">16sp</dimen>
+    <dimen name="default_space">24dp</dimen>
+    <dimen name="default_button_height">61dp</dimen>
+</resources>
