@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/YP_Blue"
+    android:theme="@style/Theme.ActivityMain"
     tools:context=".MainActivity">
 
     <com.google.android.material.appbar.MaterialToolbar
@@ -14,10 +15,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="56dp"
-        android:background="@color/YP_Blue"
         app:title="@string/app_name"
         app:titleTextColor="@color/YP_White"
-        app:titleTextAppearance="@style/ToolbarTitleStyle"/>
+        app:titleTextAppearance="@style/ToolbarTitle"/>
 
     <Space
         android:layout_width="match_parent"
@@ -25,19 +25,19 @@
 
     <Button
         android:id="@+id/search_button"
-        style="@style/TittleButtonStyle"
+        style="@style/TittleButton"
         android:text="@string/search"
         app:icon="@drawable/ic_search" />
 
     <Button
         android:id="@+id/media_library_button"
-        style="@style/TittleButtonStyle"
+        style="@style/TittleButton"
         android:text="@string/media_library"
         app:icon="@drawable/ic_library" />
 
     <Button
         android:id="@+id/settings_button"
-        style="@style/TittleButtonStyle"
+        style="@style/TittleButton"
         android:text="@string/settings"
         app:icon="@drawable/ic_settings" />
 
