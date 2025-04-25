@@ -3,7 +3,7 @@ package com.practicum.playlistmaker
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
+import androidx.core.view.isVisible
 import android.widget.EditText
 import android.widget.ImageView
 import com.google.android.material.appbar.MaterialToolbar
@@ -42,7 +42,7 @@ class SearchActivity : AppCompatActivity() {
                 searchText = s.toString()
 
                 // Показываем/скрываем иконку очистики по контексту
-                clearIcon.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+                clearIcon.isVisible = !s.isNullOrEmpty()
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}

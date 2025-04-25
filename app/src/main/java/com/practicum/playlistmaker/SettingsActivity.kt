@@ -45,7 +45,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun shareApp() {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, "https://practicum.yandex.ru/android-developer-plus/")
+            putExtra(Intent.EXTRA_TEXT, getString(R.string.app_share_link))
         }
         startActivity(Intent.createChooser(shareIntent, "Выбери приложение"))
     }
@@ -57,8 +57,8 @@ class SettingsActivity : AppCompatActivity() {
         // Создаём Intent для отправки email
         val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
             data = recipient.toUri()
-            putExtra(Intent.EXTRA_SUBJECT, "Сообщение разработчикам и разработчицам приложения Playlist Maker")
-            putExtra(Intent.EXTRA_TEXT, "Спасибо разработчикам и разработчицам за крутое приложение!")
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject))
+            putExtra(Intent.EXTRA_TEXT, getString(R.string.email_body))
         }
         // Илюзия выбора
         startActivity(Intent.createChooser(emailIntent, "Написать письмо в"))
@@ -66,7 +66,7 @@ class SettingsActivity : AppCompatActivity() {
 
     // Открытие польз соглашения в браузере по умолчанию
     private fun openUserAgreement() {
-        val agreementUrl = "https://yandex.ru/legal/practicum_offer/"
+        val agreementUrl = getString(R.string.user_agreement_url)
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(agreementUrl))
         startActivity(browserIntent)
     }
