@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<!-- Светлая тема -->
+<!-- Тёмная тема -->
     <!-- Основные -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
@@ -13,5 +13,5 @@
 
     <!-- Иконки -->
     <color name="ic_title">#1A1B22</color>
-    <color name="ic_settings">#AEAFB4</color>
+    <color name="ic_settings">#FFFFFF</color>
 </resources>

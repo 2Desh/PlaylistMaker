@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,14 +7,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white">
+    android:theme="@style/Theme.PlaylistMaker">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/title_settings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:title="@string/settings"
-        app:titleTextAppearance="@style/ToolbarTitleStyle"
+        app:titleTextAppearance="@style/ToolbarTitle"
         app:navigationIcon="@drawable/ic_arrow_back"/>
 
     <Space
@@ -26,9 +27,7 @@
         android:layout_height="@dimen/default_button_height"
         android:text="@string/dark_theme"
         android:gravity="center_vertical"
-        app:thumbTint="@color/switch_thumb_color"
-        app:trackTint="@color/switch_track_color"
-        style="@style/SettingsButtonStyle"/>
+        style="@style/SettingsButton"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/btn_share"
@@ -36,7 +35,7 @@
         android:layout_height="@dimen/default_button_height"
         android:text="@string/share_app"
         android:drawableEnd="@drawable/ic_share"
-        style="@style/SettingsButtonStyle"/>
+        style="@style/SettingsButton"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/btn_support"
@@ -44,7 +43,7 @@
         android:layout_height="@dimen/default_button_height"
         android:text="@string/write_to_support"
         android:drawableEnd="@drawable/ic_support"
-        style="@style/SettingsButtonStyle"/>
+        style="@style/SettingsButton"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/btn_eula"
@@ -52,5 +51,5 @@
         android:layout_height="@dimen/default_button_height"
         android:text="@string/EULA"
         android:drawableEnd="@drawable/ic_arrow_foward"
-        style="@style/SettingsButtonStyle"/>
+        style="@style/SettingsButton"/>
 </LinearLayout>

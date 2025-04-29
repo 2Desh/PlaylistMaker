@@ -1,6 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:theme="@style/Theme.PlaylistMaker">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/title_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="@string/search"
+        app:titleTextAppearance="@style/ToolbarTitle"
+        app:navigationIcon="@drawable/ic_arrow_back" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:paddingTop="@dimen/tiny_padding"
+        android:paddingHorizontal="@dimen/default_padding"
+        android:paddingVertical="@dimen/tiny_padding">
+
+        <EditText
+            android:id="@+id/inputEditText"
+            style="@style/SearchBarEditText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/util_rounded_corners"
+            android:backgroundTint="@color/YP_Light_Gray"
+            android:drawableStart="@drawable/ic_search"
+            android:drawablePadding="@dimen/tiny_padding"
+            android:textCursorDrawable="@drawable/ic_cursor"
+            android:paddingHorizontal="@dimen/small_padding" />
+
+        <ImageView
+            android:id="@+id/clearIcon"
+            style="@style/SearchBarIcons"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/default_marginEnd"
+            android:src="@drawable/ic_clear"
+            android:visibility="gone" />
+    </FrameLayout>
+
+</LinearLayout>
