@@ -16,4 +16,7 @@
     <string name="email_body">Спасибо разработчикам и разработчицам за крутое приложение!</string>
 
     <string name="track_cover">Изображение обложки</string>
+    <string name="placeholder_no_results">Ничего не нашлось</string>
+    <string name="placeholder_server_error_text">Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету</string>
+    <string name="refresh_button_text">Обновить</string>
 </resources>
