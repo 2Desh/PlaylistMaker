@@ -29,9 +29,9 @@ class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         Glide.with(itemView.context)
             .load(track.artworkUrl100)
+            .centerCrop() // обрезка
             .apply(requestOptions) // Применяется закругление
             .placeholder(R.drawable.placeholder) // Заглушка если нет инета
-            .centerCrop() // Маштаб
             .into(artworkImageView)
     }
 }

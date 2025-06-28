@@ -2,6 +2,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.PlaylistMaker" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:background">@color/YP_Black</item>
+
+        <item name="colorPrimary">@color/placeholder_base_color</item>
     </style>
 
     <style name="Theme.ActivityMain" parent="Theme.PlaylistMaker">
