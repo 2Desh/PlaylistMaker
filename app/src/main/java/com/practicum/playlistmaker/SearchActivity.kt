@@ -132,8 +132,8 @@ class SearchActivity : AppCompatActivity() {
             .addConverterFactory(GsonConverterFactory.create()) // конвертер GSON
             .build()
 
-        // Создаем экземпляр API из интерфейса iTunesApi
-        iTunesApiService = retrofit.create(iTunesApi::class.java)
+        // API
+        iTunesApiService = NetworkClient.iTunesApiService
     }
 
 

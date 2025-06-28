@@ -12,8 +12,8 @@ import com.google.gson.annotations.SerializedName
      всё, кроме продолжительности, может быть null
  */
 data class TrackDto(
-    @SerializedName("trackName") val trackName: String?,
-    @SerializedName("artistName") val artistName: String?,
+    @SerializedName("trackName") val trackName: String? = null,
+    @SerializedName("artistName") val artistName: String? = null,
     @SerializedName("trackTimeMillis") val trackTimeMillis: Long,
-    @SerializedName("artworkUrl100") val artworkUrl100: String?
+    @SerializedName("artworkUrl100") val artworkUrl100: String? = null
 )

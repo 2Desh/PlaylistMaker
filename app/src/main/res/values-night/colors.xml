@@ -18,4 +18,7 @@
     <!-- item_track.xml -->
     <color name="light_grey">#E6E8EB</color>
 
+    <!-- Плейсхолдеры -->
+    <color name="placeholder_base_color">@color/YP_White</color>
+
 </resources>

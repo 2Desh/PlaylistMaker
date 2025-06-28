@@ -58,6 +58,11 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/item_track" />
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="102dp">
+
     <!-- Заглушка ~ Ничего не нашлось -->
     <LinearLayout
         android:id="@+id/placeholderNoResults"
@@ -69,8 +74,8 @@
         android:padding="@dimen/default_padding">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/placeholder_def_size"
+            android:layout_height="@dimen/placeholder_def_size"
             android:src="@drawable/placeholder_no_results" />
 
         <TextView
@@ -79,9 +84,10 @@
             android:text="@string/placeholder_no_results"
             android:fontFamily="@font/ys_display_medium"
             android:textSize="@dimen/placeholder_text_size"
-            android:textColor="@color/YP_Black"
+            android:textColor="@color/placeholder_base_color"
             android:gravity="center"
             android:layout_marginTop="@dimen/margin_16dp" />
+
     </LinearLayout>
 
     <!-- Заглушка ~ Проблемы со связью -->
@@ -95,8 +101,8 @@
         android:padding="@dimen/default_padding">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/placeholder_def_size"
+            android:layout_height="@dimen/placeholder_def_size"
             android:src="@drawable/placeholder_server_error" />
 
         <TextView
@@ -105,22 +111,21 @@
             android:text="@string/placeholder_server_error_text"
             android:fontFamily="@font/ys_display_medium"
             android:textSize="@dimen/placeholder_text_size"
+            android:textColor="@color/placeholder_base_color"
             android:gravity="center"
             android:layout_marginTop="@dimen/margin_16dp" />
 
         <Button
             android:id="@+id/refreshButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="91dp"
+            android:layout_height="36dp"
             android:text="@string/refresh_button_text"
             android:fontFamily="@font/ys_display_medium"
-            android:textSize="@dimen/default_text_size"
-            android:backgroundTint="@color/YP_Black"
+            android:textSize="@dimen/text_size_14sp"
             android:layout_marginTop="@dimen/margin_24dp"
-            android:minWidth="100dp"
             android:textAllCaps="false"
             android:background="@drawable/util_rounded_corners" />
     </LinearLayout>
-
+    </FrameLayout>
 
 </LinearLayout>
