@@ -7,6 +7,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.net.toUri
+import com.google.android.material.switchmaterial.SwitchMaterial
+import android.content.Context
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,6 +38,18 @@ class SettingsActivity : AppCompatActivity() {
         val agreementButton = findViewById<TextView>(R.id.btn_eula)
         agreementButton.setOnClickListener {
             openUserAgreement()
+        }
+
+        val themeSwitcher = findViewById<SwitchMaterial>(R.id.switch_darkmode)
+        val app = applicationContext as App
+
+        val currentThemeIsDark = getSharedPreferences(App.PLAYLIST_MAKER_PREFERENCES, Context.MODE_PRIVATE)
+            .getBoolean(App.THEME_SWITCHER_KEY, false)
+
+        themeSwitcher.isChecked = currentThemeIsDark
+
+        themeSwitcher.setOnCheckedChangeListener { switcher, isChecked ->
+            app.applyTheme(isChecked)
         }
 
     }

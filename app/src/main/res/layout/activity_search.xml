@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:theme="@style/Theme.PlaylistMaker">
 
-    <!-- Toolbar -->
+    <!-- Заголовок и кнопка назад -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/title_search"
         android:layout_width="match_parent"
@@ -17,7 +17,8 @@
         app:titleTextAppearance="@style/ToolbarTitle"
         app:navigationIcon="@drawable/ic_arrow_back" />
 
-    <!-- Для поля поиска и кнопки очистки -->
+    <!-- Контейнер для поиска -->
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="52dp"
@@ -25,13 +26,13 @@
         android:paddingHorizontal="@dimen/default_padding"
         android:paddingVertical="@dimen/tiny_padding">
 
+        <!-- Поле ввода запроса в поиске -->
         <EditText
             android:id="@+id/inputEditText"
             style="@style/SearchBarEditText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/util_rounded_corners"
-            android:backgroundTint="@color/YP_Light_Gray"
+            android:background="@drawable/search_bar"
             android:drawableStart="@drawable/ic_search"
             android:drawablePadding="@dimen/tiny_padding"
             android:textCursorDrawable="@drawable/ic_cursor"
@@ -40,6 +41,7 @@
             android:singleLine="true"
             tools:text="Очень очень длинный поисковой запрос самый настоящий для проверки работы" />
 
+        <!-- Кнопка очистки поля -->
         <ImageView
             android:id="@+id/clearIcon"
             style="@style/SearchBarIcons"
@@ -50,6 +52,7 @@
             android:visibility="gone" />
     </FrameLayout>
 
+    <!-- Результаты поиска -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
@@ -58,74 +61,113 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/item_track" />
 
+    <!-- Плейсхолдеры для отображения сообщений об ошибке с инетом или результате -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="102dp">
-
-    <!-- Заглушка ~ Ничего не нашлось -->
-    <LinearLayout
-        android:id="@+id/placeholderNoResults"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone"
-        android:padding="@dimen/default_padding">
-
-        <ImageView
-            android:layout_width="@dimen/placeholder_def_size"
-            android:layout_height="@dimen/placeholder_def_size"
-            android:src="@drawable/placeholder_no_results" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/placeholder_no_results"
-            android:fontFamily="@font/ys_display_medium"
-            android:textSize="@dimen/placeholder_text_size"
-            android:textColor="@color/placeholder_base_color"
+        android:layout_marginTop="@dimen/margin_50dp">
+        <!-- Нет результатов -->
+        <LinearLayout
+            android:id="@+id/placeholderNoResults"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginTop="@dimen/margin_16dp" />
+            android:visibility="gone"
+            android:padding="@dimen/default_padding">
+            <ImageView
+                android:layout_width="@dimen/placeholder_def_size"
+                android:layout_height="@dimen/placeholder_def_size"
+                android:src="@drawable/placeholder_no_results" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/placeholder_no_results"
+                android:fontFamily="@font/ys_display_medium"
+                android:textSize="@dimen/placeholder_text_size"
+                android:textColor="@color/placeholder_base_color"
+                android:gravity="center"
+                android:layout_marginTop="@dimen/margin_16dp" />
+        </LinearLayout>
 
-    </LinearLayout>
-
-    <!-- Заглушка ~ Проблемы со связью -->
-    <LinearLayout
-        android:id="@+id/placeholderServerError"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone"
-        android:padding="@dimen/default_padding">
-
-        <ImageView
-            android:layout_width="@dimen/placeholder_def_size"
-            android:layout_height="@dimen/placeholder_def_size"
-            android:src="@drawable/placeholder_server_error" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/placeholder_server_error_text"
-            android:fontFamily="@font/ys_display_medium"
-            android:textSize="@dimen/placeholder_text_size"
-            android:textColor="@color/placeholder_base_color"
+        <!-- Нет интернета -->
+        <LinearLayout
+            android:id="@+id/placeholderServerError"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginTop="@dimen/margin_16dp" />
+            android:visibility="gone"
+            android:padding="@dimen/default_padding">
+            <ImageView
+                android:layout_width="@dimen/placeholder_def_size"
+                android:layout_height="@dimen/placeholder_def_size"
+                android:src="@drawable/placeholder_server_error" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/placeholder_server_error_text"
+                android:fontFamily="@font/ys_display_medium"
+                android:textSize="@dimen/placeholder_text_size"
+                android:textColor="@color/placeholder_base_color"
+                android:gravity="center"
+                android:layout_marginTop="@dimen/margin_16dp" />
 
-        <Button
-            android:id="@+id/refreshButton"
-            android:layout_width="91dp"
-            android:layout_height="36dp"
-            android:text="@string/refresh_button_text"
-            android:fontFamily="@font/ys_display_medium"
-            android:textSize="@dimen/text_size_14sp"
-            android:layout_marginTop="@dimen/margin_24dp"
-            android:textAllCaps="false"
-            android:background="@drawable/util_rounded_corners" />
-    </LinearLayout>
+            <!-- Кнопка обновить -->
+            <Button
+                android:id="@+id/refreshButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="@string/refresh_button_text"
+                android:fontFamily="@font/ys_display_medium"
+                android:textSize="@dimen/text_size_14sp"
+                android:layout_marginTop="@dimen/margin_24dp"
+                android:textAllCaps="false"
+                android:background="@drawable/util_rounded_corners" />
+        </LinearLayout>
+
+        <!-- История запросов -->
     </FrameLayout>
+    <LinearLayout
+        android:id="@+id/historyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
 
+        <!-- Заголовок "Вы искали" -->
+        <TextView
+            android:id="@+id/historyTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:fontFamily="@font/ys_display_medium"
+            android:text="@string/you_searched"
+            android:textColor="@color/placeholder_base_color"
+            android:textSize="@dimen/placeholder_text_size"
+            android:layout_marginTop="@dimen/margin_24dp" />
+
+        <!-- Список истории -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/historyRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="20dp"
+            tools:listitem="@layout/item_track" />
+
+        <!-- Кнопка очистки истории -->
+        <Button
+            android:id="@+id/clearHistoryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/clear_history"
+            android:layout_marginTop="@dimen/margin_24dp"
+            android:background="@drawable/clear_history_button"
+            android:textColor="?attr/colorOnPrimary"
+            android:textAllCaps="false"
+            android:gravity="center" android:textAlignment="center"/>
+    </LinearLayout>
 </LinearLayout>

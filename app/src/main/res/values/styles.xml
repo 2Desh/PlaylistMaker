@@ -66,4 +66,13 @@
         <item name="android:textColor">@color/YP_Black</item>
     </style>
 
+    <style name="PlaceholderButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/YP_Black</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:fontFamily">@font/ys_display_medium</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:paddingVertical">8dp</item>
+    </style>
+
 </resources>
