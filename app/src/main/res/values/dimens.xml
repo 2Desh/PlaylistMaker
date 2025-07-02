@@ -29,6 +29,9 @@
     <dimen name="margin_24dp">24dp</dimen>
     <dimen name="placeholder_def_size">120dp</dimen>
 
-
+    <!-- Реализация последних песен под поиском -->
+    <dimen name="margin_20dp">20dp</dimen>
+    <dimen name="margin_bottom_history_button">20dp</dimen>
+    <dimen name="margin_50dp">50dp</dimen>
 
 </resources>

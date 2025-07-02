@@ -19,4 +19,9 @@
     <string name="placeholder_no_results">Ничего не нашлось</string>
     <string name="placeholder_server_error_text">Проблемы со связью\n\nЗагрузка не удалась. Проверьте подключение к интернету</string>
     <string name="refresh_button_text">Обновить</string>
+
+    <string name="search_history_title">Вы искали</string>
+    <string name="clear_history_button_text">Очистить историю</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="you_searched">Вы искали</string>
 </resources>

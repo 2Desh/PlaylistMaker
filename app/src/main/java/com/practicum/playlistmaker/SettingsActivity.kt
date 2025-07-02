@@ -7,6 +7,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.net.toUri
+import com.google.android.material.switchmaterial.SwitchMaterial
+import android.content.Context
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,9 +16,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.title_settings)
-
-        // Кнопка Назад и закрытие активности
-        toolbar.setNavigationOnClickListener {
+        toolbar.setNavigationOnClickListener { // Кнопка Назад и закрытие активности
             onBackPressedDispatcher.onBackPressed()
         }
 
@@ -38,6 +38,12 @@ class SettingsActivity : AppCompatActivity() {
             openUserAgreement()
         }
 
+        val themeSwitcher = findViewById<SwitchMaterial>(R.id.switch_darkmode)
+        val app = applicationContext as App
+        themeSwitcher.isChecked = app.isDarkThemeEnabled()
+        themeSwitcher.setOnCheckedChangeListener { _, isChecked ->
+            app.applyTheme(isChecked)
+        }
     }
 
 
