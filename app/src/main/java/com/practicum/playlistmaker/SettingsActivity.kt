@@ -16,9 +16,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.title_settings)
-
-        // Кнопка Назад и закрытие активности
-        toolbar.setNavigationOnClickListener {
+        toolbar.setNavigationOnClickListener { // Кнопка Назад и закрытие активности
             onBackPressedDispatcher.onBackPressed()
         }
 
@@ -42,16 +40,10 @@ class SettingsActivity : AppCompatActivity() {
 
         val themeSwitcher = findViewById<SwitchMaterial>(R.id.switch_darkmode)
         val app = applicationContext as App
-
-        val currentThemeIsDark = getSharedPreferences(App.PLAYLIST_MAKER_PREFERENCES, Context.MODE_PRIVATE)
-            .getBoolean(App.THEME_SWITCHER_KEY, false)
-
-        themeSwitcher.isChecked = currentThemeIsDark
-
-        themeSwitcher.setOnCheckedChangeListener { switcher, isChecked ->
+        themeSwitcher.isChecked = app.isDarkThemeEnabled()
+        themeSwitcher.setOnCheckedChangeListener { _, isChecked ->
             app.applyTheme(isChecked)
         }
-
     }
 
 

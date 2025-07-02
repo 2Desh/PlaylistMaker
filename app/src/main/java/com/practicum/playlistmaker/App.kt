@@ -16,30 +16,31 @@ class App : Application() {
         SearchHistory(sharedPreferences, gson)
     }
 
+    override fun onCreate() {
+        super.onCreate()
+
+        // Загрузка сохраненной темы при старте приложения
+        applyTheme(isDarkThemeEnabled())
+    }
+
+    // Метод для применения темы
+    fun applyTheme(darkThemeEnabled: Boolean) {
+        AppCompatDelegate.setDefaultNightMode(
+            if (darkThemeEnabled) { AppCompatDelegate.MODE_NIGHT_YES }
+            else { AppCompatDelegate.MODE_NIGHT_NO }
+        )
+        // Сохранение выбранной темы в SharedPreferences
+        sharedPreferences.edit().putBoolean(THEME_SWITCHER_KEY, darkThemeEnabled).apply()
+    }
+
+    fun isDarkThemeEnabled(): Boolean {
+        return sharedPreferences.getBoolean(THEME_SWITCHER_KEY, false)
+    }
+
     // Константы для Shared Preferences
     companion object {
         const val PLAYLIST_MAKER_PREFERENCES = "playlist_maker_preferences"
         const val THEME_SWITCHER_KEY = "theme_switcher_key" // Ключ для сохранения темы
     }
 
-    override fun onCreate() {
-        super.onCreate()
-
-        // Загрузка сохраненной темы при старте приложения
-        val darkThemeEnabled = sharedPreferences.getBoolean(THEME_SWITCHER_KEY, false)
-        applyTheme(darkThemeEnabled)
-    }
-
-    // Метод для применения темы
-    fun applyTheme(darkThemeEnabled: Boolean) {
-        AppCompatDelegate.setDefaultNightMode(
-            if (darkThemeEnabled) {
-                AppCompatDelegate.MODE_NIGHT_YES
-            } else {
-                AppCompatDelegate.MODE_NIGHT_NO
-            }
-        )
-        // Сохранение выбранной темы в SharedPreferences
-        sharedPreferences.edit().putBoolean(THEME_SWITCHER_KEY, darkThemeEnabled).apply()
-    }
 }
