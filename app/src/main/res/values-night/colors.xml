@@ -21,4 +21,5 @@
     <!-- Плейсхолдеры -->
     <color name="placeholder_base_color">@color/YP_White</color>
 
+    <color name="searchBarColor">@color/YP_White</color>
 </resources>
