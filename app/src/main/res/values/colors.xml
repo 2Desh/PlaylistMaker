@@ -22,4 +22,9 @@
     <color name="placeholder_base_color">@color/YP_Black</color>
 
     <color name="searchBarColor">@color/YP_Light_Gray</color>
+
+    <color name="playerButtonBgColor">#1A1B22</color>
+    <color name="playerButtonColor">@color/YP_White</color>
+    <color name="playerButtonPlayColor">@color/YP_Black</color>
+
 </resources>

@@ -34,4 +34,11 @@
     <dimen name="margin_bottom_history_button">20dp</dimen>
     <dimen name="margin_50dp">50dp</dimen>
 
+    <dimen name="margin_30dp">30dp</dimen>
+    <dimen name="text_size_24sp">24sp</dimen>
+    <dimen name="text_size_13sp">13sp</dimen>
+
+    <dimen name="player_artwork_corner_radius">8dp</dimen>
+
+    <dimen name="margin_12dp">12dp</dimen>
 </resources>

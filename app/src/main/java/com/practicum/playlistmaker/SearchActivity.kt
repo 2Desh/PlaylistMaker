@@ -2,7 +2,10 @@ package com.practicum.playlistmaker
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -20,10 +23,6 @@ import com.google.android.material.appbar.MaterialToolbar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.text.SimpleDateFormat
-import java.util.Locale
-import android.os.Handler
-import android.os.Looper
 
 class SearchActivity : AppCompatActivity() {
 
@@ -35,7 +34,7 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView // RecyclerView для результатов поиска
     private val tracks = ArrayList<Track>() // список треков
 
-    private lateinit var historyLayout: LinearLayout // для истории поиска (ИСПРАВЛЕНО ИМЯ)
+    private lateinit var historyLayout: LinearLayout // для истории поиска
     private lateinit var historyRecyclerView: RecyclerView // RecyclerView для истории поиска
     private lateinit var clearHistoryButton: Button // Кнопка очистки истории
 
@@ -48,194 +47,169 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var searchHistory: SearchHistory
 
     private val historyTracks = ArrayList<Track>()              // список треков для истории поиска
-    // !!! АДАПТЕР ДЛЯ ИСТОРИИ ПОИСКА !!!
     private lateinit var historyAdapter: TrackAdapter
 
-    // Handler для дебаунса
     private val handler = Handler(Looper.getMainLooper())
-    // Runnable для дебаунса
     private val searchRunnable = Runnable { performSearch(inputEditText.text.toString()) }
 
-
+    @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
-        // иницилизация SearchHistory из App класса
+        // Инициализация SearchHistory из App класса
         searchHistory = (applicationContext as App).searchHistory
-        // история при создании активности
         historyTracks.addAll(searchHistory.getHistory())
-
-
-        // view элементы
         inputEditText = findViewById(R.id.inputEditText)
         clearIcon = findViewById(R.id.clearIcon)
         recyclerView = findViewById(R.id.recyclerView)
         placeholderNoResults = findViewById(R.id.placeholderNoResults)
         placeholderServerError = findViewById(R.id.placeholderServerError)
         refreshButton = findViewById(R.id.refreshButton)
-
-        // новые вью для истории
-        historyLayout = findViewById(R.id.historyLayout) // ИСПРАВЛЕНО ИМЯ
+        historyLayout = findViewById(R.id.historyLayout)
         historyRecyclerView = findViewById(R.id.historyRecyclerView)
         clearHistoryButton = findViewById(R.id.clearHistoryButton)
 
-        // Настройка Toolbar
         val toolbar = findViewById<MaterialToolbar>(R.id.title_search)
         toolbar.setNavigationOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
 
-        // API
         iTunesApiService = NetworkClient.iTunesApiService
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = TrackAdapter(tracks) { track ->
-            // добавляем трек в историю
+            // Добавляем трек в историю
             searchHistory.addTrackToHistory(track)
             historyTracks.clear()
             historyTracks.addAll(searchHistory.getHistory())
             historyAdapter.notifyDataSetChanged()
-            // переход на другой экран
+
+            // Переход на экран аудиоплеера
+            val intent = Intent(this, PlayerActivity::class.java)
+            intent.putExtra(PlayerActivity.TRACK_KEY, track)
+            startActivity(intent)
         }
 
-        // адаптер для истории
         historyRecyclerView.layoutManager = LinearLayoutManager(this)
         historyAdapter = TrackAdapter(historyTracks) { track ->
-            // добавляем трек в историю
+            // Добавляем трек в историю
             searchHistory.addTrackToHistory(track)
             historyTracks.clear()
             historyTracks.addAll(searchHistory.getHistory())
             historyAdapter.notifyDataSetChanged()
 
-            // поиск по имени
+            // Заполняем строку поиска и запускаем поиск
             inputEditText.setText(track.trackName)
             performSearch(track.trackName)
+
+            // Переход на экран аудиоплеера
+            val intent = Intent(this, PlayerActivity::class.java)
+            intent.putExtra(PlayerActivity.TRACK_KEY, track)
+            startActivity(intent)
         }
         historyRecyclerView.adapter = historyAdapter
 
-
-        // обработчик кнопки очистки поля ввода
         clearIcon.setOnClickListener {
             inputEditText.setText("")
             hideKeyboard()
             tracks.clear()
-            (recyclerView.adapter as TrackAdapter).notifyDataSetChanged() // обновляем список
+            (recyclerView.adapter as TrackAdapter).notifyDataSetChanged()
             hideAllPlaceholders()
-            // показываем историю если есть что показывать
             if (historyTracks.isNotEmpty()) {
-                historyLayout.isVisible = true // ИСПРАВЛЕНО ИМЯ
+                historyLayout.isVisible = true
                 recyclerView.isVisible = false
             }
         }
 
-        // Обработчик кнопки рефреш на заглушке ошибки сети
         refreshButton.setOnClickListener {
             performSearch(inputEditText.text.toString())
         }
 
-        // для отслеживания изменений текста в поле ввода
         val simpleTextWatcher = object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-
-            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 clearIcon.isVisible = !s.isNullOrEmpty()
                 searchText = s.toString()
-                hideAllPlaceholders() // скрываем все заглушки
+                hideAllPlaceholders()
 
-                // логика отображения или скрытия истории и результатов поиска
                 if (s.isNullOrEmpty() && historyTracks.isNotEmpty()) {
-                    historyLayout.isVisible = true // ИСПРАВЛЕНО ИМЯ
-                    recyclerView.isVisible = false // скрываем результаты поиска
+                    historyLayout.isVisible = true
+                    recyclerView.isVisible = false
                 } else {
-                    historyLayout.isVisible = false // ИСПРАВЛЕНО ИМЯ
+                    historyLayout.isVisible = false
                     recyclerView.isVisible = true
                 }
 
-                // удаляем предыдущие запросы и планируем новый дебаунс
                 handler.removeCallbacks(searchRunnable)
-                if (!s.isNullOrEmpty()) { // новый дебаунс если текст не пустой
+                if (!s.isNullOrEmpty()) {
                     handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
                 }
             }
 
-            override fun afterTextChanged(s: Editable?) {
-
-            }
+            override fun afterTextChanged(s: Editable?) { }
         }
         inputEditText.addTextChangedListener(simpleTextWatcher)
 
-        // обработчик для поля ввода
-        inputEditText.setOnFocusChangeListener { view, hasFocus ->
-            // если поле ввода активно, пустой текст и есть история поиска, показываем историю
+        inputEditText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus && inputEditText.text.isEmpty() && historyTracks.isNotEmpty()) {
-                historyLayout.isVisible = true // ИСПРАВЛЕНО ИМЯ
-                recyclerView.isVisible = false // скрываем результаты
+                historyLayout.isVisible = true
+                recyclerView.isVisible = false
             } else {
-                historyLayout.isVisible = false // ИСПРАВЛЕНО ИМЯ
-                recyclerView.isVisible = true // результаты
+                historyLayout.isVisible = false
+                recyclerView.isVisible = true
             }
         }
 
-        // обработка кнопы очистки истории
         clearHistoryButton.setOnClickListener {
             searchHistory.clearHistory()
-            historyTracks.clear() // очищаем список в активности
-            historyAdapter.notifyDataSetChanged() // уведомляем адаптер
-            historyLayout.isVisible = false // ИСПРАВЛЕНО ИМЯ
+            historyTracks.clear()
+            historyAdapter.notifyDataSetChanged()
+            historyLayout.isVisible = false
         }
 
-        // Обработчик кнопки на клавиатуре
         inputEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                // если все хорошо, то поиск без дебаунса
-                handler.removeCallbacks(searchRunnable) // очищаем дебаунс запросы
+                handler.removeCallbacks(searchRunnable)
                 performSearch(inputEditText.text.toString())
                 true
-            }
-            false
+            } else false
         }
     }
 
-    // Сохранение состояния при повороте экрана
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(SEARCH_TEXT_KEY, searchText)
     }
 
-    // Восстановление состояния после поворота экрана
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         searchText = savedInstanceState.getString(SEARCH_TEXT_KEY, "")
         inputEditText.setText(searchText)
-        // если был текст показываем результат
         if (searchText.isNotEmpty()) {
-            historyLayout.isVisible = false // ИСПРАВЛЕНО ИМЯ
+            historyLayout.isVisible = false
             recyclerView.isVisible = true
         } else if (historyTracks.isNotEmpty()) {
-            historyLayout.isVisible = true // ИСПРАВЛЕНО ИМЯ
+            historyLayout.isVisible = true
             recyclerView.isVisible = false
         }
     }
 
-    // Метод для выполнения поиска треков
+    @SuppressLint("NotifyDataSetChanged")
     private fun performSearch(query: String) {
         if (query.isEmpty()) {
-            // если пустой запрос, очищаем список и скрываем
             tracks.clear()
             (recyclerView.adapter as TrackAdapter).notifyDataSetChanged()
             hideAllPlaceholders()
-            // показываем историю если есть что
             if (historyTracks.isNotEmpty()) {
-                historyLayout.isVisible = true // ИСПРАВЛЕНО ИМЯ
+                historyLayout.isVisible = true
                 recyclerView.isVisible = false
             }
             return
         }
 
-        tracks.clear() // Очищаем старые результаты перед новым поиском
+        tracks.clear()
         (recyclerView.adapter as TrackAdapter).notifyDataSetChanged()
         hideAllPlaceholders()
         recyclerView.isVisible = true
@@ -243,21 +217,26 @@ class SearchActivity : AppCompatActivity() {
         val call = iTunesApiService.search(query)
 
         call.enqueue(object : Callback<ITunesResponse> {
+            @SuppressLint("NotifyDataSetChanged")
             override fun onResponse(call: Call<ITunesResponse>, response: Response<ITunesResponse>) {
                 if (response.isSuccessful) {
                     val iTunesResponse = response.body()
                     if (iTunesResponse != null && iTunesResponse.results.isNotEmpty()) {
                         tracks.addAll(iTunesResponse.results.map {
                             Track(
-                                it.trackName ?: "Unknown Track",
-                                it.artistName ?: "Unknown Artist",
-                                SimpleDateFormat("mm:ss", Locale.getDefault()).format(it.trackTimeMillis),
-                                it.artworkUrl100 ?: "",
-                                it.trackId // Добавлено поле trackId, если оно есть в Track.kt
+                                trackName = it.trackName ?: getString(R.string.unknown_track_name),
+                                trackId = it.trackId,
+                                artistName = it.artistName ?: getString(R.string.unknown_artist_name),
+                                trackTime = it.trackTimeMillis,
+                                artworkUrl100 = it.artworkUrl100 ?: "",
+                                collectionName = it.collectionName,
+                                releaseDate = it.releaseDate,
+                                primaryGenreName = it.primaryGenreName,
+                                country = it.country
                             )
                         })
                         (recyclerView.adapter as TrackAdapter).notifyDataSetChanged()
-                        hideAllPlaceholders() // В случае успеха скрываем заглушки
+                        hideAllPlaceholders()
                     } else {
                         tracks.clear()
                         (recyclerView.adapter as TrackAdapter).notifyDataSetChanged()
@@ -292,7 +271,6 @@ class SearchActivity : AppCompatActivity() {
         placeholderServerError.isVisible = false
     }
 
-    // Скрытие клавиатуры
     private fun hideKeyboard() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(inputEditText.windowToken, 0)
@@ -302,6 +280,6 @@ class SearchActivity : AppCompatActivity() {
         const val SEARCH_TEXT_KEY = "searchText"
         const val TAG = "SearchActivity"
 
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L // константа для задержки дебаунса
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
     }
 }
