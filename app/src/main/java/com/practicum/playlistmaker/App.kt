@@ -19,8 +19,18 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Загрузка сохраненной темы при старте приложения
-        applyTheme(isDarkThemeEnabled())
+        // Проверяем. Если первый запуск, определяем значение на основе системных настроек
+        if (!sharedPreferences.contains(THEME_SWITCHER_KEY)) {
+            val isSystemDark = resources.configuration.uiMode and
+                    android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+            // применяем системную тему
+            applyTheme(isSystemDark)
+        } else {
+            // Если значение уже есть, загружаем сохранённое
+            applyTheme(isDarkThemeEnabled())
+        }
     }
 
     // Метод для применения темы
@@ -40,7 +50,7 @@ class App : Application() {
     // Константы для Shared Preferences
     companion object {
         const val PLAYLIST_MAKER_PREFERENCES = "playlist_maker_preferences"
-        const val THEME_SWITCHER_KEY = "theme_switcher_key" // Ключ для сохранения темы
+        const val THEME_SWITCHER_KEY = "theme_switcher_key"
     }
 
 }

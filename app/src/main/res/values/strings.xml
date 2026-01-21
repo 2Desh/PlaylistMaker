@@ -24,4 +24,21 @@
     <string name="clear_history_button_text">Очистить историю</string>
     <string name="clear_history">Очистить историю</string>
     <string name="you_searched">Вы искали</string>
+
+    <string name="unknown_track_name">Трек без названия</string>
+    <string name="unknown_artist_name">Неизвестный исполнитель</string>
+
+    <string name="track_artwork_description">Обложка трека</string>
+    <string name="add_to_playlist_description">Добавить в плейлист</string>
+    <string name="play_pause_button_description">Кнопка воспроизведения/паузы</string>
+    <string name="add_to_favorites_description">Добавить в избранное</string>
+    <string name="album_name">Название альбома</string>
+    <string name="release_year">Год</string>
+    <string name="genre">Жанр</string>
+    <string name="country">Страна</string>
+    <string name="Duration">Длительность</string>
+    <string name="Album">Альбом</string>
+    <string name="Year">Год</string>
+    <string name="Genre">Жанр</string>
+    <string name="Country">Страна</string>
 </resources>

@@ -9,11 +9,29 @@ import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.net.toUri
 import com.google.android.material.switchmaterial.SwitchMaterial
 import android.content.Context
+import android.view.View
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+
+        val rootView = findViewById<View>(R.id.settings)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updatePadding(
+                top = systemBars.top,
+                bottom = systemBars.bottom,
+                left = systemBars.left,
+                right = systemBars.right
+            )
+            insets
+        }
 
         val toolbar = findViewById<MaterialToolbar>(R.id.title_settings)
         toolbar.setNavigationOnClickListener { // Кнопка Назад и закрытие активности
