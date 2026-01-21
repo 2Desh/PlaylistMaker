@@ -22,6 +22,11 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.ProgressBar
 import android.content.Intent
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import android.view.View
 
 class SearchActivity : AppCompatActivity() {
 
@@ -60,8 +65,19 @@ class SearchActivity : AppCompatActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) { // TODO: Очень перегруженный. Сделай рефакторинг. Вынеси инициализацию View и слушателей в отдельные методы.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
+
+        val rootView = findViewById<View>(R.id.search)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updatePadding(
+                top = systemBars.top,
+                bottom = systemBars.bottom
+            )
+            insets
+        }
 
         // иницилизация SearchHistory из App класса
         searchHistory = (applicationContext as App).searchHistory
