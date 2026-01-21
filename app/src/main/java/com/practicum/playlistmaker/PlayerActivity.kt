@@ -14,7 +14,6 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.appbar.MaterialToolbar
 import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
@@ -47,23 +46,15 @@ class PlayerActivity : AppCompatActivity() {
         override fun run() {
             if (playerState == STATE_PLAYING) {
                 // Обновляем текущее время воспроизведения
-                playbackProgressTextView.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(mediaPlayer.currentPosition)
+                playbackProgressTextView.text = dateFormat.format(mediaPlayer.currentPosition)
                 // Запускаем снова через 300 мс (достаточно плавно для секунд)
                 mainThreadHandler.postDelayed(this, DELAY)
             }
         }
     }
 
-    companion object {
-        const val TRACK_KEY = "track_key"
-
-        // Константы состояний
-        private const val STATE_DEFAULT = 0
-        private const val STATE_PREPARED = 1
-        private const val STATE_PLAYING = 2
-        private const val STATE_PAUSED = 3
-
-        private const val DELAY = 300L
+    private val dateFormat by lazy {
+        SimpleDateFormat("mm:ss", Locale.getDefault())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,8 +127,7 @@ class PlayerActivity : AppCompatActivity() {
         trackNameTextView.text = track.trackName
         artistNameTextView.text = track.artistName
 
-        // Важно: начальное значение таймера 00:00
-        playbackProgressTextView.text = "00:00"
+        playbackProgressTextView.text = dateFormat.format(0)
 
         val cornerRadius = resources.getDimensionPixelSize(R.dimen.player_artwork_corner_radius)
         Glide.with(this)
@@ -171,7 +161,7 @@ class PlayerActivity : AppCompatActivity() {
                 playPauseButton.setImageResource(R.drawable.ic_play)
                 playerState = STATE_PREPARED
                 mainThreadHandler.removeCallbacks(updateTimerTask)
-                playbackProgressTextView.text = "00:00" // Сбрасываем таймер в 0
+                playbackProgressTextView.text = dateFormat.format(0) // Сбрасываем таймер в 0
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -201,5 +191,17 @@ class PlayerActivity : AppCompatActivity() {
                 startPlayer()
             }
         }
+    }
+
+    companion object {
+        const val TRACK_KEY = "track_key"
+
+        // Константы состояний
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
+
+        private const val DELAY = 300L
     }
 }
