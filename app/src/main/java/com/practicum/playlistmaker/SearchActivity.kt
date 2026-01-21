@@ -101,12 +101,8 @@ class SearchActivity : AppCompatActivity() {
                 historyTracks.clear()
                 historyTracks.addAll(searchHistory.getHistory())
                 historyAdapter.notifyDataSetChanged()
-                // переход на другой экран
-                val intent = Intent(this, PlayerActivity::class.java)
-                intent.putExtra(PlayerActivity.TRACK_KEY, track)
-                startActivity(intent)
 
-
+                openPlayer(track) // переход на экран плеера
             }
         }
 
@@ -120,13 +116,11 @@ class SearchActivity : AppCompatActivity() {
                 historyTracks.addAll(searchHistory.getHistory())
                 historyAdapter.notifyDataSetChanged()
 
-                val intent = Intent(this, PlayerActivity::class.java)
-                intent.putExtra(PlayerActivity.TRACK_KEY, track)
-                startActivity(intent)
+                openPlayer(track) // переход на экран плеера
 
                 // поиск по имени
-                inputEditText.setText(track.trackName)
-                performSearch(track.trackName)
+                // inputEditText.setText(track.trackName)
+                // performSearch(track.trackName)
             }
         }
         historyRecyclerView.adapter = historyAdapter
@@ -328,6 +322,13 @@ class SearchActivity : AppCompatActivity() {
             handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
         }
         return current
+    }
+
+    private fun openPlayer(track: Track) {
+        val intent = Intent(this, PlayerActivity::class.java).apply {
+            putExtra(PlayerActivity.TRACK_KEY, track)
+        }
+        startActivity(intent)
     }
 
     private fun hideAllPlaceholders() {
