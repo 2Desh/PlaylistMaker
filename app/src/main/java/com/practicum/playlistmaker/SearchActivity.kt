@@ -1,6 +1,5 @@
 package com.practicum.playlistmaker
 
-import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -118,9 +117,6 @@ class SearchActivity : AppCompatActivity() {
 
                 openPlayer(track) // переход на экран плеера
 
-                // поиск по имени
-                // inputEditText.setText(track.trackName)
-                // performSearch(track.trackName)
             }
         }
         historyRecyclerView.adapter = historyAdapter
