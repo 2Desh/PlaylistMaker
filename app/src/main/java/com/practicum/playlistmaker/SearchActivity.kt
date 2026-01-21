@@ -1,6 +1,5 @@
 package com.practicum.playlistmaker
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.text.Editable
@@ -20,8 +19,6 @@ import com.google.android.material.appbar.MaterialToolbar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.text.SimpleDateFormat
-import java.util.Locale
 import android.os.Handler
 import android.os.Looper
 import android.widget.ProgressBar
@@ -62,7 +59,7 @@ class SearchActivity : AppCompatActivity() {
     private val searchRunnable = Runnable { performSearch(inputEditText.text.toString()) }
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) { // TODO: Очень перегруженный. Сделай рефакторинг. Вынеси инициализацию View и слушателей в отдельные методы.
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
@@ -149,7 +146,7 @@ class SearchActivity : AppCompatActivity() {
 
         // для отслеживания изменений текста в поле ввода
         val simpleTextWatcher = object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {} // вызывается до изменения текста, позволяет узнать старое значение
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 clearIcon.isVisible = !s.isNullOrEmpty()
@@ -168,13 +165,13 @@ class SearchActivity : AppCompatActivity() {
                     searchDebounce()
                 }
             }
-            override fun afterTextChanged(s: Editable?) {}
+            override fun afterTextChanged(s: Editable?) {} // обязательный метод интерфейса TextWatcher, сейчас не используется
         }
 
         inputEditText.addTextChangedListener(simpleTextWatcher)
 
         // обработчик для поля ввода
-        inputEditText.setOnFocusChangeListener { view, hasFocus ->
+        inputEditText.setOnFocusChangeListener { _, hasFocus ->
             // если поле ввода активно, пустой текст и есть история поиска, показываем историю
             if (hasFocus && inputEditText.text.isEmpty() && historyTracks.isNotEmpty()) {
                 historyLayout.isVisible = true // ИСПРАВЛЕНО ИМЯ
