@@ -22,6 +22,7 @@ import retrofit2.Response
 import android.os.Handler
 import android.os.Looper
 import android.widget.ProgressBar
+import android.content.Intent
 
 class SearchActivity : AppCompatActivity() {
 
@@ -101,6 +102,11 @@ class SearchActivity : AppCompatActivity() {
                 historyTracks.addAll(searchHistory.getHistory())
                 historyAdapter.notifyDataSetChanged()
                 // переход на другой экран
+                val intent = Intent(this, PlayerActivity::class.java)
+                intent.putExtra(PlayerActivity.TRACK_KEY, track)
+                startActivity(intent)
+
+
             }
         }
 
@@ -113,6 +119,10 @@ class SearchActivity : AppCompatActivity() {
                 historyTracks.clear()
                 historyTracks.addAll(searchHistory.getHistory())
                 historyAdapter.notifyDataSetChanged()
+
+                val intent = Intent(this, PlayerActivity::class.java)
+                intent.putExtra(PlayerActivity.TRACK_KEY, track)
+                startActivity(intent)
 
                 // поиск по имени
                 inputEditText.setText(track.trackName)
@@ -272,7 +282,8 @@ class SearchActivity : AppCompatActivity() {
                                 collectionName = it.collectionName,
                                 releaseDate = it.releaseDate,
                                 primaryGenreName = it.primaryGenreName,
-                                country = it.country
+                                country = it.country,
+                                previewUrl = it.previewUrl
                             )
                         })
 

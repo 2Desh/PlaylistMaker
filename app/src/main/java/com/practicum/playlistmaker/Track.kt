@@ -13,8 +13,9 @@ data class Track(
     val collectionName: String?,    // Название альбома
     val releaseDate: String?,       // Год релиза
     val primaryGenreName: String?,  // Жанр
-    val country: String?            // Страна
+    val country: String?,            // Страна
+    val previewUrl: String? = null   //
 ) : Parcelable {
-    // Функция для получения ссылки на обложку размером 512x512
+    // Функция для получения ссылки на обложку
     fun getCoverArtwork() = artworkUrl100.replaceAfterLast('/', "512x512bb.jpg")
 }

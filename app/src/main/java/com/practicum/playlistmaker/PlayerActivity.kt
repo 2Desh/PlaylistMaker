@@ -1,7 +1,10 @@
 package com.practicum.playlistmaker
 
 import android.annotation.SuppressLint
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -9,10 +12,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.appbar.MaterialToolbar
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class PlayerActivity : AppCompatActivity() {
 
+    // UI элементы
     private lateinit var artworkImageView: ImageView
     private lateinit var trackNameTextView: TextView
     private lateinit var artistNameTextView: TextView
@@ -23,12 +29,79 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var countryValueTextView: TextView
     private lateinit var playPauseButton: ImageView
 
-    @SuppressLint("DefaultLocale")
+    // Логика плеера
+    private var mediaPlayer = MediaPlayer()
+    private var playerState = STATE_DEFAULT
+    private var previewUrl: String? = null
+
+    // Handler для обновления времени
+    private val mainThreadHandler = Handler(Looper.getMainLooper())
+
+    // Задача для обновления таймера
+    private val updateTimerTask = object : Runnable {
+        override fun run() {
+            if (playerState == STATE_PLAYING) {
+                // Обновляем текущее время воспроизведения
+                playbackProgressTextView.text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(mediaPlayer.currentPosition)
+                // Запускаем снова через 300 мс (достаточно плавно для секунд)
+                mainThreadHandler.postDelayed(this, DELAY)
+            }
+        }
+    }
+
+    companion object {
+        const val TRACK_KEY = "track_key"
+
+        // Константы состояний
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
+
+        private const val DELAY = 300L
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_audioplayer)
+        setContentView(R.layout.activity_audioplayer) // Убедись, что имя файла совпадает
 
-        // Инициализация View-элементов
+        initViews()
+
+        // Настройка Toolbar
+        val toolbar = findViewById<MaterialToolbar>(R.id.playerToolbar)
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
+
+        // Получение данных трека
+        val track = intent.getParcelableExtra<Track>(TRACK_KEY)
+
+        if (track != null) {
+            bindTrackData(track)
+            previewUrl = track.previewUrl
+            preparePlayer()
+        } else {
+            finish()
+        }
+
+        // Обработка нажатия на кнопку Play/Pause
+        playPauseButton.setOnClickListener {
+            playbackControl()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        pausePlayer() // Ставим на паузу при сворачивании
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mainThreadHandler.removeCallbacks(updateTimerTask) // Удаляем колбэк таймера
+        mediaPlayer.release() // Освобождаем ресурсы плеера
+    }
+
+    private fun initViews() {
         artworkImageView = findViewById(R.id.artworkImageView)
         trackNameTextView = findViewById(R.id.trackNameTextView)
         artistNameTextView = findViewById(R.id.artistNameTextView)
@@ -38,46 +111,77 @@ class PlayerActivity : AppCompatActivity() {
         primaryGenreNameValueTextView = findViewById(R.id.primaryGenreNameValueTextView)
         countryValueTextView = findViewById(R.id.countryValueTextView)
         playPauseButton = findViewById(R.id.playPauseButton)
+    }
 
-        // Обработка кнопки "назад" в MaterialToolbar
-        val toolbar = findViewById<MaterialToolbar>(R.id.playerToolbar)
-        toolbar.setNavigationOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
+    @SuppressLint("SetTextI18n")
+    private fun bindTrackData(track: Track) {
+        trackNameTextView.text = track.trackName
+        artistNameTextView.text = track.artistName
 
-        // Получение Track из Intent
-        val track = intent.getParcelableExtra<Track>(TRACK_KEY)
+        // Важно: начальное значение таймера 00:00
+        playbackProgressTextView.text = "00:00"
 
-        track?.let {
-            // Заполнение полей данными из объекта Track
-            trackNameTextView.text = it.trackName
-            artistNameTextView.text = it.artistName
-            val minutes = TimeUnit.MILLISECONDS.toMinutes(it.trackTime)
-            val seconds = TimeUnit.MILLISECONDS.toSeconds(it.trackTime) % 60
-            playbackProgressTextView.text = String.format("%02d:%02d", minutes, seconds)
+        val cornerRadius = resources.getDimensionPixelSize(R.dimen.player_artwork_corner_radius)
+        Glide.with(this)
+            .load(track.getCoverArtwork())
+            .centerCrop()
+            .apply(RequestOptions.bitmapTransform(RoundedCorners(cornerRadius)))
+            .placeholder(R.drawable.placeholder)
+            .into(artworkImageView)
 
-            // Загрузка обложки с закругленными углами
-            val cornerRadius = resources.getDimensionPixelSize(R.dimen.player_artwork_corner_radius)
-            Glide.with(this)
-                .load(it.getCoverArtwork())
-                .centerCrop()
-                .apply(RequestOptions.bitmapTransform(RoundedCorners(cornerRadius)))
-                .placeholder(R.drawable.placeholder)
-                .into(artworkImageView)
+        collectionNameValueTextView.text = track.collectionName ?: ""
+        releaseDateValueTextView.text = track.releaseDate?.take(4) ?: ""
+        primaryGenreNameValueTextView.text = track.primaryGenreName ?: ""
+        countryValueTextView.text = track.country ?: ""
 
-            // Заполнение таблицы с деталями трека
-            collectionNameValueTextView.text = it.collectionName ?: ""
-            releaseDateValueTextView.text = it.releaseDate?.take(4) ?: "" // Берем только год
-            primaryGenreNameValueTextView.text = it.primaryGenreName ?: ""
-            countryValueTextView.text = it.country ?: ""
-        }
+        // Если нужно отобразить полную длительность (не превью) в таблице, можно добавить это здесь
+        // Но для progress bar мы используем логику 00:00 -> 00:30
+    }
 
-        playPauseButton.setOnClickListener {
-            // Здесь будет логика для паузы/воспроизведения и смены иконки
+    private fun preparePlayer() {
+        if (previewUrl == null) return
+
+        try {
+            mediaPlayer.setDataSource(previewUrl)
+            mediaPlayer.prepareAsync()
+            mediaPlayer.setOnPreparedListener {
+                playPauseButton.isEnabled = true
+                playerState = STATE_PREPARED
+            }
+            mediaPlayer.setOnCompletionListener {
+                // Когда трек заканчивается (30 сек)
+                playPauseButton.setImageResource(R.drawable.ic_play)
+                playerState = STATE_PREPARED
+                mainThreadHandler.removeCallbacks(updateTimerTask)
+                playbackProgressTextView.text = "00:00" // Сбрасываем таймер в 0
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    companion object {
-        const val TRACK_KEY = "track_key"
+    private fun startPlayer() {
+        mediaPlayer.start()
+        playPauseButton.setImageResource(R.drawable.ic_pause) // Меняем на паузу
+        playerState = STATE_PLAYING
+        mainThreadHandler.post(updateTimerTask)
+    }
+
+    private fun pausePlayer() {
+        mediaPlayer.pause()
+        playPauseButton.setImageResource(R.drawable.ic_play) // Меняем на play
+        playerState = STATE_PAUSED
+        mainThreadHandler.removeCallbacks(updateTimerTask)
+    }
+
+    private fun playbackControl() {
+        when(playerState) {
+            STATE_PLAYING -> {
+                pausePlayer()
+            }
+            STATE_PREPARED, STATE_PAUSED -> {
+                startPlayer()
+            }
+        }
     }
 }
