@@ -267,11 +267,15 @@ class SearchActivity : AppCompatActivity() {
                     if (iTunesResponse != null && iTunesResponse.results.isNotEmpty()) {
                         tracks.addAll(iTunesResponse.results.map {
                             Track(
-                                it.trackName ?: "Unknown Track",
-                                it.artistName ?: "Unknown Artist",
-                                SimpleDateFormat("mm:ss", Locale.getDefault()).format(it.trackTimeMillis),
-                                it.artworkUrl100 ?: "",
-                                it.trackId // Добавлено поле trackId, если оно есть в Track.kt
+                                trackName = it.trackName ?: "Unknown Track",
+                                artistName = it.artistName ?: "Unknown Artist",
+                                trackTime = it.trackTimeMillis ?: 0L,
+                                artworkUrl100 = it.artworkUrl100 ?: "",
+                                trackId = it.trackId ?: 0L,
+                                collectionName = it.collectionName,
+                                releaseDate = it.releaseDate,
+                                primaryGenreName = it.primaryGenreName,
+                                country = it.country
                             )
                         })
 
