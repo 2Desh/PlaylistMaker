@@ -14,6 +14,7 @@
     <!-- Иконки -->
     <color name="ic_title">#1A1B22</color>
     <color name="ic_settings">#AEAFB4</color>
+    <color name="ic_arrow_back">@color/YP_Black</color>
 
     <!-- item_track.xml -->
     <color name="grey">#AEAFB4</color>

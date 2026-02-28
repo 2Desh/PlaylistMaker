@@ -8,10 +8,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 // реализация клиента, которая физически идет в интернет через retrofit
 class RetrofitNetworkClient : NetworkClient {
 
-    private val itunesBaseUrl = "https://itunes.apple.com"
-
     private val retrofit = Retrofit.Builder()
-        .baseUrl(itunesBaseUrl)
+        .baseUrl(itunes_base_url)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
@@ -30,5 +28,9 @@ class RetrofitNetworkClient : NetworkClient {
             // если таймаут или нет сети, возвращаем код ошибки
             Response().apply { resultCode = -1 }
         }
+    }
+
+    companion object {
+        private const val itunes_base_url = "https://itunes.apple.com"
     }
 }

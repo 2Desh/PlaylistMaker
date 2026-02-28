@@ -13,10 +13,6 @@ class SearchHistoryRepositoryImpl(
     private val gson: Gson
 ) : SearchHistoryRepository {
 
-    companion object {
-        private const val SEARCH_HISTORY_KEY = "search_history_key"
-    }
-
     override fun getHistory(): List<Track> {
         val json = sharedPrefs.getString(SEARCH_HISTORY_KEY, null) ?: return emptyList()
         val type = object : TypeToken<List<Track>>() {}.type
@@ -30,5 +26,9 @@ class SearchHistoryRepositoryImpl(
 
     override fun clearHistory() {
         sharedPrefs.edit { remove(SEARCH_HISTORY_KEY) }
+    }
+
+    companion object {
+        private const val SEARCH_HISTORY_KEY = "search_history_key"
     }
 }

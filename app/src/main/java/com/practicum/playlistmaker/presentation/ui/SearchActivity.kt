@@ -22,6 +22,7 @@ import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.domain.api.SearchHistoryInteractor
 import com.practicum.playlistmaker.domain.models.Track
 import com.practicum.playlistmaker.presentation.adapters.TrackAdapter
+import androidx.core.widget.doOnTextChanged
 
 class SearchActivity : AppCompatActivity() {
 
@@ -129,23 +130,19 @@ class SearchActivity : AppCompatActivity() {
             historyLayout.isVisible = false
         }
 
-        inputEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {} // шаблонный код
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                clearIcon.isVisible = !s.isNullOrEmpty()
-                searchText = s.toString()
-                hideAllPlaceholders()
+        inputEditText.doOnTextChanged { text, _, _, _ ->
+            clearIcon.isVisible = !text.isNullOrEmpty()
+            searchText = text.toString()
+            hideAllPlaceholders()
 
-                if (s.isNullOrEmpty()) {
-                    handler.removeCallbacks(searchRunnable)
-                    showHistoryIfPossible()
-                } else {
-                    historyLayout.isVisible = false
-                    searchDebounce()
-                }
+            if (text.isNullOrEmpty()) {
+                handler.removeCallbacks(searchRunnable)
+                showHistoryIfPossible()
+            } else {
+                historyLayout.isVisible = false
+                searchDebounce()
             }
-            override fun afterTextChanged(s: android.text.Editable?) {} // шаблонный код
-        })
+        }
 
         inputEditText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus && inputEditText.text.isEmpty()) showHistoryIfPossible()
