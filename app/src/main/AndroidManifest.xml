@@ -19,7 +19,7 @@
 
         <!-- титульник -->
         <activity
-            android:name=".MainActivity"
+            android:name=".presentation.ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,18 +29,18 @@
 
         <!-- поиск ббтека и настройки -->
         <activity
-            android:name=".SearchActivity"
+            android:name=".presentation.ui.SearchActivity"
             android:exported="true" />
 
         <activity
-            android:name=".MediaLibraryActivity"
+            android:name=".presentation.ui.MediaLibraryActivity"
             android:exported="true" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".presentation.ui.SettingsActivity"
             android:exported="true" />
 
-        <activity android:name=".PlayerActivity"
+        <activity android:name=".presentation.ui.PlayerActivity"
             android:exported="true" />
     </application>
 

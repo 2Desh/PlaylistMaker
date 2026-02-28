@@ -1,10 +1,9 @@
-package com.practicum.playlistmaker
+package com.practicum.playlistmaker.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-/*
- Класс для объекта трека, как он приходит в ответе от iTunes Search API
- */
+
+// модель данных трека, которую присылает api
 data class TrackDto(
     @SerializedName("trackName") val trackName: String? = null,
     @SerializedName("artistName") val artistName: String? = null,
