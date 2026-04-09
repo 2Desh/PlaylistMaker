@@ -15,7 +15,7 @@ class PlayerViewModel(
 ) : ViewModel() {
 
     // _stateLiveData - приватная, её может изменять только сама ViewModel
-    private val _stateLiveData = MutableLiveData<PlayerState>(PlayerState.Default)
+    private val _stateLiveData = MutableLiveData<PlayerState>(PlayerState.Default(formatTime(0)))
     // stateLiveData - публичная, Activity может только подписываться на неё, но не менять
     val stateLiveData: LiveData<PlayerState> = _stateLiveData
 
@@ -38,12 +38,12 @@ class PlayerViewModel(
         audioPlayerInteractor.preparePlayer(
             url = url,
             onPreparedListener = {
-                // Плеер готов, отправляем состояние Prepared
-                _stateLiveData.postValue(PlayerState.Prepared)
+                // Передаем formatTime(0)
+                _stateLiveData.postValue(PlayerState.Prepared(formatTime(0)))
             },
             onCompletionListener = {
-                // Трек доиграл до конца, сбрасываем состояние в Prepared и останавливаем таймер
-                _stateLiveData.postValue(PlayerState.Prepared)
+                // Передаем formatTime(0)
+                _stateLiveData.postValue(PlayerState.Prepared(formatTime(0)))
                 handler.removeCallbacks(timerRunnable)
             }
         )
@@ -60,10 +60,10 @@ class PlayerViewModel(
         val currentProgress = if (_stateLiveData.value is PlayerState.Playing) {
             (_stateLiveData.value as PlayerState.Playing).progress
         } else {
-            "00:00"
+            formatTime(0) // Заменили "00:00" на вызов функции форматирования
         }
         _stateLiveData.postValue(PlayerState.Paused(currentProgress))
-        handler.removeCallbacks(timerRunnable) // Останавливаем таймер
+        handler.removeCallbacks(timerRunnable)
     }
 
     // Обработка нажатия на кнопку Play/Pause

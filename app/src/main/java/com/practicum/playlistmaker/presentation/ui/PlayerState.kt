@@ -6,11 +6,16 @@ sealed class PlayerState(
     val buttonText: String,
     val progress: String
 ) {
-    object Default : PlayerState(isPlayButtonEnabled = false, buttonText = "PLAY", progress = "00:00")
+    class Default(progress: String) : PlayerState(isPlayButtonEnabled = false, buttonText = STATE_PLAY, progress = progress)
 
-    object Prepared : PlayerState(isPlayButtonEnabled = true, buttonText = "PLAY", progress = "00:00")
+    class Prepared(progress: String) : PlayerState(isPlayButtonEnabled = true, buttonText = STATE_PLAY, progress = progress)
 
-    class Playing(progress: String) : PlayerState(isPlayButtonEnabled = true, buttonText = "PAUSE", progress = progress)
+    class Playing(progress: String) : PlayerState(isPlayButtonEnabled = true, buttonText = STATE_PAUSE, progress = progress)
 
-    class Paused(progress: String) : PlayerState(isPlayButtonEnabled = true, buttonText = "PLAY", progress = progress)
+    class Paused(progress: String) : PlayerState(isPlayButtonEnabled = true, buttonText = STATE_PLAY, progress = progress)
+
+    companion object {
+        const val STATE_PLAY = "PLAY"
+        const val STATE_PAUSE = "PAUSE"
+    }
 }

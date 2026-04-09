@@ -130,8 +130,8 @@ class PlayerActivity : AppCompatActivity() {
         playbackProgressTextView.text = state.progress
 
         when (state.buttonText) {
-            "PLAY" -> playPauseButton.setImageResource(R.drawable.ic_play)
-            "PAUSE" -> playPauseButton.setImageResource(R.drawable.ic_pause)
+            PlayerState.STATE_PLAY -> playPauseButton.setImageResource(R.drawable.ic_play)
+            PlayerState.STATE_PAUSE -> playPauseButton.setImageResource(R.drawable.ic_pause)
         }
     }
 
