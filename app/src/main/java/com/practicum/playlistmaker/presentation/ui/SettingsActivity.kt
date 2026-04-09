@@ -1,37 +1,41 @@
 package com.practicum.playlistmaker.presentation.ui
 
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.practicum.playlistmaker.App
-import com.practicum.playlistmaker.Creator
 import com.practicum.playlistmaker.R
-import com.practicum.playlistmaker.domain.api.SettingsInteractor
-import com.practicum.playlistmaker.domain.api.SharingInteractor
 
+// View-компонент экрана настроек. Подписывается на LiveData состояния темы и передает UI события во ViewModel.
 class SettingsActivity : AppCompatActivity() {
 
-    private lateinit var sharingInteractor: SharingInteractor
-    private lateinit var settingsInteractor: SettingsInteractor
+    private lateinit var themeSwitcher: SwitchMaterial
+    private lateinit var viewModel: SettingsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
+        // Инициализируем ViewModel с помощью фабрики
+        viewModel = ViewModelProvider(this, SettingsViewModelFactory(this))[SettingsViewModel::class.java]
+
         initWindowInsets()
-        initInteractors()
         initViews()
+        setupListeners()
+        observeViewModel()
     }
 
     private fun initWindowInsets() {
-        val rootView = findViewById<android.view.View>(R.id.settings)
+        val rootView = findViewById<View>(R.id.settings)
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.updatePadding(
@@ -44,42 +48,40 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun initInteractors() {
-        sharingInteractor = Creator.provideSharingInteractor(this)
-        settingsInteractor = Creator.provideSettingsInteractor(this)
-    }
-
     private fun initViews() {
-        // настройка Toolbar
+        themeSwitcher = findViewById(R.id.switch_darkmode)
+
         val toolbar = findViewById<MaterialToolbar>(R.id.title_settings)
         toolbar.setNavigationOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
-        setupSharingButtons()
-        setupThemeSwitcher()
     }
 
-    private fun setupSharingButtons() {
+    private fun setupListeners() {
         findViewById<TextView>(R.id.btn_share).setOnClickListener {
-            sharingInteractor.shareApp()
+            viewModel.shareApp()
         }
 
         findViewById<TextView>(R.id.btn_support).setOnClickListener {
-            sharingInteractor.openSupport()
+            viewModel.openSupport()
         }
 
         findViewById<TextView>(R.id.btn_eula).setOnClickListener {
-            sharingInteractor.openTerms()
+            viewModel.openTerms()
+        }
+
+        themeSwitcher.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.updateTheme(isChecked)
         }
     }
 
-    private fun setupThemeSwitcher() {
-        val themeSwitcher = findViewById<SwitchMaterial>(R.id.switch_darkmode)
-        themeSwitcher.isChecked = settingsInteractor.getThemeSettings()
-        themeSwitcher.setOnCheckedChangeListener { _, isChecked ->
-            // сохраняем новое состояние в SharedPreferences через интерактор
-            settingsInteractor.updateThemeSetting(isChecked)
-            (applicationContext as App).applyTheme(isChecked)
+    private fun observeViewModel() {
+        viewModel.themeState.observe(this) { isDark ->
+            if (themeSwitcher.isChecked != isDark) {
+                themeSwitcher.isChecked = isDark
+            }
+
+            (applicationContext as App).applyTheme(isDark)
         }
     }
 }

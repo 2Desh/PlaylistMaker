@@ -1,9 +1,6 @@
 package com.practicum.playlistmaker.presentation.ui
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -12,19 +9,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.appbar.MaterialToolbar
-import com.practicum.playlistmaker.Creator
 import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.domain.models.Track
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class PlayerActivity : AppCompatActivity() {
 
-    // UI элементы
     private lateinit var artworkImageView: ImageView
     private lateinit var trackNameTextView: TextView
     private lateinit var artistNameTextView: TextView
@@ -35,34 +29,16 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var countryValueTextView: TextView
     private lateinit var playPauseButton: ImageView
 
-    // логика плеера через новую архитектуру
-    private val audioPlayerInteractor = Creator.provideAudioPlayerInteractor()
-    private var playerState = STATE_DEFAULT
-    private var previewUrl: String? = null
-
-    // handler для обновления времени
-    private val mainThreadHandler = Handler(Looper.getMainLooper())
-
-    // задача для обновления таймера
-    @Suppress("kotlin:S6516")
-    private val updateTimerTask = object : Runnable {
-        override fun run() {
-            if (playerState == STATE_PLAYING) {
-                // обновляем текущее время воспроизведения через интерактор
-                playbackProgressTextView.text = dateFormat.format(audioPlayerInteractor.getCurrentPosition())
-                mainThreadHandler.postDelayed(this, DELAY)
-            }
-        }
-    }
-
-    private val dateFormat by lazy {
-        SimpleDateFormat("mm:ss", Locale.getDefault())
-    }
+    // Объявляем ViewModel
+    private lateinit var viewModel: PlayerViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audioplayer)
+
+        // Инициализируем ViewModel с помощью нашей Фабрики
+        viewModel = ViewModelProvider(this, PlayerViewModelFactory())[PlayerViewModel::class.java]
 
         val rootView = findViewById<View>(R.id.audioplayer)
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
@@ -78,40 +54,45 @@ class PlayerActivity : AppCompatActivity() {
 
         initViews()
 
-        // настройка toolbar
         val toolbar = findViewById<MaterialToolbar>(R.id.playerToolbar)
         toolbar.setNavigationOnClickListener {
             finish()
         }
 
-        // получение данных трека
+        // Подписываемся на изменения состояния из ViewModel.
+        // Каждый раз, когда ViewModel меняет состояние, вызывается метод render()
+        viewModel.stateLiveData.observe(this) { state ->
+            render(state)
+        }
+
         @Suppress("DEPRECATION")
         val track = intent.getParcelableExtra<Track>(TRACK_KEY)
 
         if (track != null) {
             bindTrackData(track)
-            previewUrl = track.previewUrl
-            preparePlayer()
+
+            // Если ссылка на превью есть, передаем её во ViewModel для подготовки плеера
+            track.previewUrl?.let { url ->
+                viewModel.preparePlayer(url)
+            }
         } else {
             finish()
         }
 
-        // обработка нажатия на кнопку play/pause
+        // При нажатии на кнопку просто делегируем задачу во ViewModel
         playPauseButton.setOnClickListener {
-            playbackControl()
+            viewModel.playbackControl()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        pausePlayer() // ставим на паузу при сворачивании
+        // При сворачивании приложения ставим плеер на паузу через ViewModel
+        viewModel.pausePlayer()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        mainThreadHandler.removeCallbacks(updateTimerTask) // удаляем колбэк таймера
-        audioPlayerInteractor.release() // освобождаем ресурсы плеера через интерактор
-    }
+    // Метод onDestroy() мы удалили, так как ViewModel.onCleared()
+    // сама всё корректно очистит при закрытии Activity.
 
     private fun initViews() {
         artworkImageView = findViewById(R.id.artworkImageView)
@@ -125,12 +106,9 @@ class PlayerActivity : AppCompatActivity() {
         playPauseButton = findViewById(R.id.playPauseButton)
     }
 
-    @SuppressLint("SetTextI18n")
     private fun bindTrackData(track: Track) {
         trackNameTextView.text = track.trackName
         artistNameTextView.text = track.artistName
-
-        playbackProgressTextView.text = dateFormat.format(0)
 
         val cornerRadius = resources.getDimensionPixelSize(R.dimen.player_artwork_corner_radius)
         Glide.with(this)
@@ -146,60 +124,18 @@ class PlayerActivity : AppCompatActivity() {
         countryValueTextView.text = track.country ?: ""
     }
 
-    private fun preparePlayer() {
-        if (previewUrl == null) return
+    // Этот метод отвечает исключительно за отрисовку UI на основе текущего состояния
+    private fun render(state: PlayerState) {
+        playPauseButton.isEnabled = state.isPlayButtonEnabled
+        playbackProgressTextView.text = state.progress
 
-        // передаем ссылку и два колбэка в интерактор
-        audioPlayerInteractor.preparePlayer(
-            url = previewUrl!!,
-            onPreparedListener = {
-                playPauseButton.isEnabled = true
-                playerState = STATE_PREPARED
-            },
-            onCompletionListener = {
-                // когда трек заканчивается
-                playPauseButton.setImageResource(R.drawable.ic_play)
-                playerState = STATE_PREPARED
-                mainThreadHandler.removeCallbacks(updateTimerTask)
-                playbackProgressTextView.text = dateFormat.format(0) // сбрасываем таймер в 0
-            }
-        )
-    }
-
-    private fun startPlayer() {
-        audioPlayerInteractor.startPlayer()
-        playPauseButton.setImageResource(R.drawable.ic_pause) // меняем на паузу
-        playerState = STATE_PLAYING
-        mainThreadHandler.post(updateTimerTask)
-    }
-
-    private fun pausePlayer() {
-        audioPlayerInteractor.pausePlayer()
-        playPauseButton.setImageResource(R.drawable.ic_play) // меняем на play
-        playerState = STATE_PAUSED
-        mainThreadHandler.removeCallbacks(updateTimerTask)
-    }
-
-    private fun playbackControl() {
-        when(playerState) {
-            STATE_PLAYING -> {
-                pausePlayer()
-            }
-            STATE_PREPARED, STATE_PAUSED -> {
-                startPlayer()
-            }
+        when (state.buttonText) {
+            "PLAY" -> playPauseButton.setImageResource(R.drawable.ic_play)
+            "PAUSE" -> playPauseButton.setImageResource(R.drawable.ic_pause)
         }
     }
 
     companion object {
         const val TRACK_KEY = "track_key"
-
-        // константы состояний
-        private const val STATE_DEFAULT = 0
-        private const val STATE_PREPARED = 1
-        private const val STATE_PLAYING = 2
-        private const val STATE_PAUSED = 3
-
-        private const val DELAY = 300L
     }
 }

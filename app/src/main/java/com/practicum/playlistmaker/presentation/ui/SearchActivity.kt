@@ -2,8 +2,6 @@ package com.practicum.playlistmaker.presentation.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -14,16 +12,16 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
+import androidx.core.widget.doOnTextChanged
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
-import com.practicum.playlistmaker.Creator
 import com.practicum.playlistmaker.R
-import com.practicum.playlistmaker.domain.api.SearchHistoryInteractor
 import com.practicum.playlistmaker.domain.models.Track
 import com.practicum.playlistmaker.presentation.adapters.TrackAdapter
-import androidx.core.widget.doOnTextChanged
 
+// View-компонент поиска. Маршрутизирует действия пользователя во ViewModel и обновляет видимость элементов UI на основе TracksSearchState.
 class SearchActivity : AppCompatActivity() {
 
     private lateinit var inputEditText: EditText
@@ -37,28 +35,34 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var refreshButton: Button
     private lateinit var progressBar: ProgressBar
 
-    private var searchText: String = ""
+    // Адаптеры
+    private lateinit var searchAdapter: TrackAdapter
+    private lateinit var historyAdapter: TrackAdapter
+
+    // Списки для адаптеров
     private val tracks = ArrayList<Track>()
     private val historyTracks = ArrayList<Track>()
 
-    private lateinit var historyAdapter: TrackAdapter
-    private val tracksInteractor = Creator.provideTracksInteractor()
-    private lateinit var searchHistoryInteractor: SearchHistoryInteractor
-
-    private var isClickAllowed = true
-    private val handler = Handler(Looper.getMainLooper())
-    private val searchRunnable = Runnable { performSearch(inputEditText.text.toString()) }
+    // ViewModel
+    private lateinit var viewModel: SearchViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
+        // Инициализируем ViewModel с помощью фабрики
+        viewModel = ViewModelProvider(this, SearchViewModelFactory(this))[SearchViewModel::class.java]
+
         initWindowInsets()
-        initInteractors()
         initViews()
         setupAdapters()
         setupListeners()
+
+        // Подписываемся на изменения состояния
+        viewModel.stateLiveData.observe(this) { state ->
+            render(state)
+        }
     }
 
     private fun initWindowInsets() {
@@ -68,11 +72,6 @@ class SearchActivity : AppCompatActivity() {
             v.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
             insets
         }
-    }
-
-    private fun initInteractors() {
-        searchHistoryInteractor = Creator.provideSearchHistoryInteractor(this)
-        historyTracks.addAll(searchHistoryInteractor.getHistory())
     }
 
     private fun initViews() {
@@ -89,17 +88,20 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun setupAdapters() {
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = TrackAdapter(tracks) { track ->
-            if (clickDebounce()) {
-                saveToHistory(track)
+        // Адаптер поиска
+        searchAdapter = TrackAdapter(tracks) { track ->
+            if (viewModel.clickDebounce()) {
+                viewModel.addToHistory(track)
                 openPlayer(track)
             }
         }
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = searchAdapter
 
+        // Адаптер для истории
         historyAdapter = TrackAdapter(historyTracks) { track ->
-            if (clickDebounce()) {
-                saveToHistory(track)
+            if (viewModel.clickDebounce()) {
+                viewModel.addToHistory(track)
                 openPlayer(track)
             }
         }
@@ -114,109 +116,74 @@ class SearchActivity : AppCompatActivity() {
         clearIcon.setOnClickListener {
             inputEditText.setText("")
             hideKeyboard()
-            handler.removeCallbacks(searchRunnable)
-            tracks.clear()
-            recyclerView.adapter?.notifyDataSetChanged()
-            hideAllPlaceholders()
-            showHistoryIfPossible()
+            viewModel.showHistory()
         }
 
-        refreshButton.setOnClickListener { performSearch(inputEditText.text.toString()) }
+        refreshButton.setOnClickListener {
+            viewModel.refreshSearch()
+        }
 
         clearHistoryButton.setOnClickListener {
-            searchHistoryInteractor.clearHistory()
-            historyTracks.clear()
-            historyAdapter.notifyDataSetChanged()
-            historyLayout.isVisible = false
+            viewModel.clearHistory()
         }
 
         inputEditText.doOnTextChanged { text, _, _, _ ->
             clearIcon.isVisible = !text.isNullOrEmpty()
-            searchText = text.toString()
-            hideAllPlaceholders()
-
-            if (text.isNullOrEmpty()) {
-                handler.removeCallbacks(searchRunnable)
-                showHistoryIfPossible()
+            val query = text?.toString() ?: ""
+            if (query.isEmpty()) {
+                viewModel.showHistory()
             } else {
-                historyLayout.isVisible = false
-                searchDebounce()
+                viewModel.searchDebounce(query)
             }
         }
 
         inputEditText.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && inputEditText.text.isEmpty()) showHistoryIfPossible()
+            if (hasFocus && inputEditText.text.isEmpty()) {
+                viewModel.showHistory()
+            }
         }
 
         inputEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                handler.removeCallbacks(searchRunnable)
-                performSearch(inputEditText.text.toString())
+                viewModel.searchRequest(inputEditText.text.toString())
                 true
             } else false
         }
     }
 
-    private fun performSearch(query: String) {
-        if (query.isEmpty()) return
-
-        progressBar.isVisible = true
+    // Метод, управляющий видимостью элементов экрана
+    private fun render(state: TracksSearchState) {
         recyclerView.isVisible = false
-        hideAllPlaceholders()
-
-        tracksInteractor.searchTracks(query) { foundTracks, errorMessage ->
-            runOnUiThread {
-                handleSearchResult(foundTracks, errorMessage)
-            }
-        }
-    }
-
-    private fun handleSearchResult(foundTracks: List<Track>?, errorMessage: String?) {
+        historyLayout.isVisible = false
+        placeholderNoResults.isVisible = false
+        placeholderServerError.isVisible = false
         progressBar.isVisible = false
 
-        if (foundTracks != null) {
-            tracks.clear()
-            tracks.addAll(foundTracks)
-            recyclerView.adapter?.notifyDataSetChanged()
-            recyclerView.isVisible = tracks.isNotEmpty()
-            if (tracks.isEmpty()) placeholderNoResults.isVisible = true
-        }
-
-        if (errorMessage != null) {
-            if (errorMessage == "Ничего не найдено") {
+        when (state) {
+            is TracksSearchState.Loading -> {
+                progressBar.isVisible = true
+            }
+            is TracksSearchState.Content -> {
+                recyclerView.isVisible = true
+                tracks.clear()
+                tracks.addAll(state.tracks)
+                searchAdapter.notifyDataSetChanged()
+            }
+            is TracksSearchState.History -> {
+                historyLayout.isVisible = true
+                historyTracks.clear()
+                historyTracks.addAll(state.tracks)
+                historyAdapter.notifyDataSetChanged()
+            }
+            is TracksSearchState.Empty -> {
                 placeholderNoResults.isVisible = true
-            } else {
+            }
+            is TracksSearchState.Error -> {
                 placeholderServerError.isVisible = true
             }
+            is TracksSearchState.Default -> { // комм чтобы IDE не ругалось на пустышку
+            }
         }
-    }
-
-    private fun saveToHistory(track: Track) {
-        searchHistoryInteractor.addTrackToHistory(track)
-        historyTracks.clear()
-        historyTracks.addAll(searchHistoryInteractor.getHistory())
-        historyAdapter.notifyDataSetChanged()
-    }
-
-    private fun showHistoryIfPossible() {
-        if (historyTracks.isNotEmpty()) {
-            historyLayout.isVisible = true
-            recyclerView.isVisible = false
-        }
-    }
-
-    private fun searchDebounce() {
-        handler.removeCallbacks(searchRunnable)
-        handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
-    }
-
-    private fun clickDebounce(): Boolean {
-        val current = isClickAllowed
-        if (isClickAllowed) {
-            isClickAllowed = false
-            handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
-        }
-        return current
     }
 
     private fun openPlayer(track: Track) {
@@ -226,41 +193,8 @@ class SearchActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun hideAllPlaceholders() {
-        placeholderNoResults.isVisible = false
-        placeholderServerError.isVisible = false
-    }
-
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(inputEditText.windowToken, 0)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(SEARCH_TEXT_KEY, searchText)
-    }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        searchText = savedInstanceState.getString(SEARCH_TEXT_KEY, "")
-        inputEditText.setText(searchText)
-        if (searchText.isNotEmpty()) {
-            historyLayout.isVisible = false
-            recyclerView.isVisible = true
-        } else {
-            showHistoryIfPossible()
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        handler.removeCallbacksAndMessages(null)
-    }
-
-    companion object {
-        const val SEARCH_TEXT_KEY = "searchText"
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L
-        private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }
