@@ -8,30 +8,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.practicum.playlistmaker.App
 import com.practicum.playlistmaker.R
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-// View-компонент экрана настроек. Подписывается на LiveData состояния темы и передает UI события во ViewModel.
 class SettingsActivity : AppCompatActivity() {
-
-    private lateinit var themeSwitcher: SwitchMaterial
-    private lateinit var viewModel: SettingsViewModel
+    private val viewModel by viewModel<SettingsViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        // Инициализируем ViewModel с помощью фабрики
-        viewModel = ViewModelProvider(this, SettingsViewModelFactory(this))[SettingsViewModel::class.java]
-
         initWindowInsets()
         initViews()
-        setupListeners()
-        observeViewModel()
     }
 
     private fun initWindowInsets() {
@@ -49,39 +41,22 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        themeSwitcher = findViewById(R.id.switch_darkmode)
-
         val toolbar = findViewById<MaterialToolbar>(R.id.title_settings)
-        toolbar.setNavigationOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-    }
+        toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
-    private fun setupListeners() {
-        findViewById<TextView>(R.id.btn_share).setOnClickListener {
-            viewModel.shareApp()
-        }
+        findViewById<TextView>(R.id.btn_share).setOnClickListener { viewModel.shareApp() }
+        findViewById<TextView>(R.id.btn_support).setOnClickListener { viewModel.openSupport() }
+        findViewById<TextView>(R.id.btn_eula).setOnClickListener { viewModel.openTerms() }
 
-        findViewById<TextView>(R.id.btn_support).setOnClickListener {
-            viewModel.openSupport()
-        }
+        val themeSwitcher = findViewById<SwitchMaterial>(R.id.switch_darkmode)
 
-        findViewById<TextView>(R.id.btn_eula).setOnClickListener {
-            viewModel.openTerms()
+        viewModel.themeState.observe(this) { isDark ->
+            themeSwitcher.isChecked = isDark
+            (applicationContext as App).applyTheme(isDark)
         }
 
         themeSwitcher.setOnCheckedChangeListener { _, isChecked ->
             viewModel.updateTheme(isChecked)
-        }
-    }
-
-    private fun observeViewModel() {
-        viewModel.themeState.observe(this) { isDark ->
-            if (themeSwitcher.isChecked != isDark) {
-                themeSwitcher.isChecked = isDark
-            }
-
-            (applicationContext as App).applyTheme(isDark)
         }
     }
 }

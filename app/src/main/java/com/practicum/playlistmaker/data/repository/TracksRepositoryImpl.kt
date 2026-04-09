@@ -6,28 +6,34 @@ import com.practicum.playlistmaker.data.dto.TrackSearchResponse
 import com.practicum.playlistmaker.domain.api.TracksRepository
 import com.practicum.playlistmaker.domain.models.Track
 
-// получает данные из сети и превращает trackdto в доменные модели track
+// Реализация репозитория для поиска треков. Отвечает за маппинг данных из DTO в доменные модели и обработку ошибок сети.
 class TracksRepositoryImpl(private val networkClient: NetworkClient) : TracksRepository {
-
-    override fun searchTracks(expression: String): List<Track> {
+    override fun searchTracks(expression: String): List<Track>? {
         val response = networkClient.doRequest(TrackSearchRequest(expression))
-        return if (response.resultCode == 200) {
-            (response as TrackSearchResponse).results.map {
-                Track(
-                    it.trackName ?: "",
-                    it.artistName ?: "",
-                    it.trackTimeMillis,
-                    it.artworkUrl100 ?: "",
-                    it.trackId,
-                    it.collectionName,
-                    it.releaseDate,
-                    it.primaryGenreName,
-                    it.country,
-                    it.previewUrl
-                )
+
+        return when (response.resultCode) {
+            200 -> {
+                (response as TrackSearchResponse).results.map {
+                    Track(
+                        it.trackName ?: "",
+                        it.artistName ?: "",
+                        it.trackTimeMillis,
+                        it.artworkUrl100 ?: "",
+                        it.trackId,
+                        it.collectionName,
+                        it.releaseDate,
+                        it.primaryGenreName,
+                        it.country,
+                        it.previewUrl
+                    )
+                }
             }
-        } else {
-            emptyList()
+            -1 -> {
+                null
+            }
+            else -> {
+                null
+            }
         }
     }
 }

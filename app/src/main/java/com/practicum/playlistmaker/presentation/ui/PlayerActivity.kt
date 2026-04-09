@@ -9,130 +9,122 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.appbar.MaterialToolbar
 import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.domain.models.Track
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+import androidx.core.content.IntentCompat
 
 class PlayerActivity : AppCompatActivity() {
+    private val viewModel by viewModel<PlayerViewModel>()
 
-    private lateinit var artworkImageView: ImageView
-    private lateinit var trackNameTextView: TextView
-    private lateinit var artistNameTextView: TextView
-    private lateinit var playbackProgressTextView: TextView
-    private lateinit var collectionNameValueTextView: TextView
-    private lateinit var releaseDateValueTextView: TextView
-    private lateinit var primaryGenreNameValueTextView: TextView
-    private lateinit var countryValueTextView: TextView
-    private lateinit var playPauseButton: ImageView
-
-    // Объявляем ViewModel
-    private lateinit var viewModel: PlayerViewModel
+    private lateinit var playButton: ImageView
+    private lateinit var trackTimeTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_audioplayer)
 
-        // Инициализируем ViewModel с помощью нашей Фабрики
-        viewModel = ViewModelProvider(this, PlayerViewModelFactory())[PlayerViewModel::class.java]
-
-        val rootView = findViewById<View>(R.id.audioplayer)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updatePadding(
-                left = systemBars.left,
-                top = systemBars.top,
-                right = systemBars.right,
-                bottom = systemBars.bottom
-            )
-            insets
-        }
-
+        initWindowInsets()
         initViews()
 
-        val toolbar = findViewById<MaterialToolbar>(R.id.playerToolbar)
-        toolbar.setNavigationOnClickListener {
-            finish()
-        }
-
-        // Подписываемся на изменения состояния из ViewModel.
-        // Каждый раз, когда ViewModel меняет состояние, вызывается метод render()
-        viewModel.stateLiveData.observe(this) { state ->
-            render(state)
-        }
-
-        @Suppress("DEPRECATION")
-        val track = intent.getParcelableExtra<Track>(TRACK_KEY)
-
+        val track = IntentCompat.getParcelableExtra(intent, TRACK_KEY, Track::class.java)
         if (track != null) {
             bindTrackData(track)
 
-            // Если ссылка на превью есть, передаем её во ViewModel для подготовки плеера
-            track.previewUrl?.let { url ->
+            val url = track.previewUrl
+            if (!url.isNullOrEmpty()) {
                 viewModel.preparePlayer(url)
             }
-        } else {
-            finish()
         }
 
-        // При нажатии на кнопку просто делегируем задачу во ViewModel
-        playPauseButton.setOnClickListener {
+        viewModel.stateLiveData.observe(this) { state ->
+            renderState(state)
+        }
+    }
+
+    private fun initWindowInsets() {
+        val rootView = findViewById<View>(R.id.audioplayer)
+        if (rootView != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                v.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
+                insets
+            }
+        }
+    }
+
+    private fun initViews() {
+        val toolbar = findViewById<MaterialToolbar>(R.id.playerToolbar)
+        toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+
+        playButton = findViewById(R.id.playPauseButton)
+        trackTimeTextView = findViewById(R.id.playbackProgressTextView)
+
+        playButton.setOnClickListener {
             viewModel.playbackControl()
+        }
+    }
+
+    private fun bindTrackData(track: Track) {
+        // Основная информация
+        findViewById<TextView>(R.id.trackNameTextView).text = track.trackName
+        findViewById<TextView>(R.id.artistNameTextView).text = track.artistName
+
+        // Форматируем время
+        val formattedTime = SimpleDateFormat("mm:ss", Locale.getDefault()).format(track.trackTime)
+        findViewById<TextView>(R.id.durationValueTextView).text = formattedTime
+        findViewById<TextView>(R.id.collectionNameValueTextView).text = track.collectionName
+
+        val year = track.releaseDate?.take(4) ?: ""
+        findViewById<TextView>(R.id.releaseDateValueTextView).text = year
+
+        findViewById<TextView>(R.id.primaryGenreNameValueTextView).text = track.primaryGenreName
+        findViewById<TextView>(R.id.countryValueTextView).text = track.country
+
+        // Обложка трека
+        val coverImageView = findViewById<ImageView>(R.id.artworkImageView)
+        val artworkUrl512 = track.artworkUrl100.replaceAfterLast('/', "512x512bb.jpg")
+
+        Glide.with(this)
+            .load(artworkUrl512)
+            .placeholder(R.drawable.placeholder)
+            .centerCrop()
+            .transform(RoundedCorners(resources.getDimensionPixelSize(R.dimen.player_artwork_corner_radius)))
+            .into(coverImageView)
+    }
+
+    private fun renderState(state: PlayerState) {
+        when (state) {
+            is PlayerState.Default -> {
+                playButton.isEnabled = false
+                playButton.setImageResource(R.drawable.ic_play)
+                trackTimeTextView.text = state.progress
+            }
+            is PlayerState.Prepared -> {
+                playButton.isEnabled = true
+                playButton.setImageResource(R.drawable.ic_play)
+                trackTimeTextView.text = state.progress
+            }
+            is PlayerState.Playing -> {
+                playButton.setImageResource(R.drawable.ic_pause)
+                trackTimeTextView.text = state.progress
+            }
+            is PlayerState.Paused -> {
+                playButton.setImageResource(R.drawable.ic_play)
+                trackTimeTextView.text = state.progress
+            }
         }
     }
 
     override fun onPause() {
         super.onPause()
-        // При сворачивании приложения ставим плеер на паузу через ViewModel
         viewModel.pausePlayer()
-    }
-
-    // Метод onDestroy() мы удалили, так как ViewModel.onCleared()
-    // сама всё корректно очистит при закрытии Activity.
-
-    private fun initViews() {
-        artworkImageView = findViewById(R.id.artworkImageView)
-        trackNameTextView = findViewById(R.id.trackNameTextView)
-        artistNameTextView = findViewById(R.id.artistNameTextView)
-        playbackProgressTextView = findViewById(R.id.playbackProgressTextView)
-        collectionNameValueTextView = findViewById(R.id.collectionNameValueTextView)
-        releaseDateValueTextView = findViewById(R.id.releaseDateValueTextView)
-        primaryGenreNameValueTextView = findViewById(R.id.primaryGenreNameValueTextView)
-        countryValueTextView = findViewById(R.id.countryValueTextView)
-        playPauseButton = findViewById(R.id.playPauseButton)
-    }
-
-    private fun bindTrackData(track: Track) {
-        trackNameTextView.text = track.trackName
-        artistNameTextView.text = track.artistName
-
-        val cornerRadius = resources.getDimensionPixelSize(R.dimen.player_artwork_corner_radius)
-        Glide.with(this)
-            .load(track.getCoverArtwork())
-            .centerCrop()
-            .apply(RequestOptions.bitmapTransform(RoundedCorners(cornerRadius)))
-            .placeholder(R.drawable.placeholder)
-            .into(artworkImageView)
-
-        collectionNameValueTextView.text = track.collectionName ?: ""
-        releaseDateValueTextView.text = track.releaseDate?.take(4) ?: ""
-        primaryGenreNameValueTextView.text = track.primaryGenreName ?: ""
-        countryValueTextView.text = track.country ?: ""
-    }
-
-    // Этот метод отвечает исключительно за отрисовку UI на основе текущего состояния
-    private fun render(state: PlayerState) {
-        playPauseButton.isEnabled = state.isPlayButtonEnabled
-        playbackProgressTextView.text = state.progress
-
-        when (state.buttonText) {
-            PlayerState.STATE_PLAY -> playPauseButton.setImageResource(R.drawable.ic_play)
-            PlayerState.STATE_PAUSE -> playPauseButton.setImageResource(R.drawable.ic_pause)
-        }
     }
 
     companion object {

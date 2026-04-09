@@ -157,9 +157,9 @@
                     style="@style/TrackInfoLabel"
                     android:text="@string/Duration" />
                 <TextView
+                    android:id="@+id/durationValueTextView"
                     style="@style/TrackInfoValue"
-                    android:text="5:00"
-                    tools:ignore="HardcodedText" />
+                    tools:text="5:00" />
             </TableRow>
 
             <TableRow>
@@ -172,19 +172,17 @@
                     android:layout_width="0dp"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="Очень длинное название какого то альбомаааааааааааааааа"
-                    tools:ignore="HardcodedText" />
+                    tools:text="Название альбома" />
             </TableRow>
 
             <TableRow>
                 <TextView
-                    android:id="@+id/releaseDateValueTextView"
                     style="@style/TrackInfoLabel"
                     android:text="@string/Year" />
                 <TextView
+                    android:id="@+id/releaseDateValueTextView"
                     style="@style/TrackInfoValue"
-                    android:text="1234"
-                    tools:ignore="HardcodedText" />
+                    tools:text="2001" />
             </TableRow>
 
             <TableRow>
@@ -197,8 +195,7 @@
                     style="@style/TrackInfoValue"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="Rock"
-                    tools:ignore="HardcodedText" />
+                    tools:text="НазванЖанра" />
             </TableRow>
 
             <TableRow>
@@ -211,8 +208,7 @@
                     style="@style/TrackInfoValue"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="Длинное название какой-то определенной страныаааааааааааааааааа"
-                    tools:ignore="HardcodedText" />
+                    tools:text="НазваниеСтраны" />
             </TableRow>
 
         </TableLayout>
