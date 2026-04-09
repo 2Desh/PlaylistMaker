@@ -16,6 +16,5 @@ val repositoryModule = module {
 
     single<ExternalNavigator> { ExternalNavigatorImpl(androidContext()) }
 
-    // Если AudioPlayerRepositoryImpl не принимает аргументов, оставляем пустые скобки
-    factory<AudioPlayerRepository> { AudioPlayerRepositoryImpl() }
+    factory<AudioPlayerRepository> { AudioPlayerRepositoryImpl(get()) }
 }

@@ -3,13 +3,12 @@ package com.practicum.playlistmaker.data.repository
 import android.media.MediaPlayer
 import com.practicum.playlistmaker.domain.api.AudioPlayerRepository
 
-// управляет системным медиаплеером
-class AudioPlayerRepositoryImpl : AudioPlayerRepository {
-
-    private var mediaPlayer = MediaPlayer()
+// управляет медиаплеером
+class AudioPlayerRepositoryImpl(private val mediaPlayer: MediaPlayer) : AudioPlayerRepository {
 
     override fun preparePlayer(url: String, onPreparedListener: () -> Unit, onCompletionListener: () -> Unit) {
         try {
+            mediaPlayer.reset()
             mediaPlayer.setDataSource(url)
             mediaPlayer.prepareAsync()
             mediaPlayer.setOnPreparedListener {
