@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:title="@string/settings"
+        app:navigationIconTint="@color/ic_arrow_back"
         app:titleTextAppearance="@style/ToolbarTitle"
         app:navigationIcon="@drawable/ic_arrow_back"/>
 

@@ -1,15 +1,15 @@
-package com.practicum.playlistmaker
+package com.practicum.playlistmaker.presentation.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.widget.Button
-import android.view.View
-import androidx.activity.enableEdgeToEdge
 import androidx.core.view.updatePadding
+import com.practicum.playlistmaker.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,12 +29,12 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Находим кнопки
+        // находим кнопки
         val searchButton = findViewById<Button>(R.id.search_button)
         val mediaLibraryButton = findViewById<Button>(R.id.media_library_button)
         val settingsButton = findViewById<Button>(R.id.settings_button)
 
-        // Назначаем обработчики нажатий
+        // назначаем обработчики нажатий
         searchButton.setOnClickListener {
             startActivity(Intent(this, SearchActivity::class.java))
         }

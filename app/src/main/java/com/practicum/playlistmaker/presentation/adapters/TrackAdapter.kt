@@ -1,9 +1,12 @@
-package com.practicum.playlistmaker
+package com.practicum.playlistmaker.presentation.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.practicum.playlistmaker.R
+import com.practicum.playlistmaker.domain.models.Track
 
+// логика отображения списка треков в recyclerview
 class TrackAdapter(
     private val tracks: ArrayList<Track>, // Список треков
     // обработчик кликов
