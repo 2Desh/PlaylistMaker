@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.google.material) // Основная библиотека для Material Design компонентов
 
+    implementation(libs.koin.android)
+
     // Сеть и JSON (Retrofit + Gson)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
@@ -61,7 +63,7 @@ dependencies {
     annotationProcessor(libs.glide.compiler)
 
     // Тестирование
-    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    testImplementation(libs.junit)
 }

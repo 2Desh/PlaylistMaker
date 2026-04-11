@@ -1,5 +1,6 @@
 package com.practicum.playlistmaker.presentation.ui
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -13,16 +14,17 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.widget.doOnTextChanged
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.domain.models.Track
 import com.practicum.playlistmaker.presentation.adapters.TrackAdapter
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
-// View-компонент поиска. Маршрутизирует действия пользователя во ViewModel и обновляет видимость элементов UI на основе TracksSearchState.
 class SearchActivity : AppCompatActivity() {
+
+    private val viewModel by viewModel<SearchViewModel>()
 
     private lateinit var inputEditText: EditText
     private lateinit var clearIcon: ImageView
@@ -35,34 +37,22 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var refreshButton: Button
     private lateinit var progressBar: ProgressBar
 
-    // Адаптеры
-    private lateinit var searchAdapter: TrackAdapter
-    private lateinit var historyAdapter: TrackAdapter
-
-    // Списки для адаптеров
     private val tracks = ArrayList<Track>()
     private val historyTracks = ArrayList<Track>()
 
-    // ViewModel
-    private lateinit var viewModel: SearchViewModel
+    private lateinit var trackAdapter: TrackAdapter
+    private lateinit var historyAdapter: TrackAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_search)
 
-        // Инициализируем ViewModel с помощью фабрики
-        viewModel = ViewModelProvider(this, SearchViewModelFactory(this))[SearchViewModel::class.java]
-
         initWindowInsets()
         initViews()
         setupAdapters()
         setupListeners()
-
-        // Подписываемся на изменения состояния
-        viewModel.stateLiveData.observe(this) { state ->
-            render(state)
-        }
+        observeViewModel()
     }
 
     private fun initWindowInsets() {
@@ -88,17 +78,15 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun setupAdapters() {
-        // Адаптер поиска
-        searchAdapter = TrackAdapter(tracks) { track ->
+        trackAdapter = TrackAdapter(tracks) { track ->
             if (viewModel.clickDebounce()) {
                 viewModel.addToHistory(track)
                 openPlayer(track)
             }
         }
         recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = searchAdapter
+        recyclerView.adapter = trackAdapter
 
-        // Адаптер для истории
         historyAdapter = TrackAdapter(historyTracks) { track ->
             if (viewModel.clickDebounce()) {
                 viewModel.addToHistory(track)
@@ -129,11 +117,11 @@ class SearchActivity : AppCompatActivity() {
 
         inputEditText.doOnTextChanged { text, _, _, _ ->
             clearIcon.isVisible = !text.isNullOrEmpty()
-            val query = text?.toString() ?: ""
-            if (query.isEmpty()) {
+
+            if (inputEditText.hasFocus() && text.isNullOrEmpty()) {
                 viewModel.showHistory()
             } else {
-                viewModel.searchDebounce(query)
+                viewModel.searchDebounce(text.toString())
             }
         }
 
@@ -151,39 +139,49 @@ class SearchActivity : AppCompatActivity() {
         }
     }
 
-    // Метод, управляющий видимостью элементов экрана
-    private fun render(state: TracksSearchState) {
+    @SuppressLint("NotifyDataSetChanged")
+    private fun observeViewModel() {
+        viewModel.stateLiveData.observe(this) { state ->
+            hideAllViews()
+
+            when (state) {
+                is TracksSearchState.Loading -> {
+                    progressBar.isVisible = true
+                }
+                is TracksSearchState.Content -> {
+                    recyclerView.isVisible = true
+                    tracks.clear()
+                    tracks.addAll(state.tracks)
+                    trackAdapter.notifyDataSetChanged()
+                }
+                is TracksSearchState.Empty -> {
+                    placeholderNoResults.isVisible = true
+                }
+                is TracksSearchState.Error -> {
+                    placeholderServerError.isVisible = true
+                }
+                is TracksSearchState.History -> {
+                    historyLayout.isVisible = true
+                    historyTracks.clear()
+                    historyTracks.addAll(state.tracks)
+                    historyAdapter.notifyDataSetChanged()
+                }
+                is TracksSearchState.Default -> Unit
+            }
+        }
+    }
+
+    private fun hideAllViews() {
+        progressBar.isVisible = false
         recyclerView.isVisible = false
         historyLayout.isVisible = false
         placeholderNoResults.isVisible = false
         placeholderServerError.isVisible = false
-        progressBar.isVisible = false
+    }
 
-        when (state) {
-            is TracksSearchState.Loading -> {
-                progressBar.isVisible = true
-            }
-            is TracksSearchState.Content -> {
-                recyclerView.isVisible = true
-                tracks.clear()
-                tracks.addAll(state.tracks)
-                searchAdapter.notifyDataSetChanged()
-            }
-            is TracksSearchState.History -> {
-                historyLayout.isVisible = true
-                historyTracks.clear()
-                historyTracks.addAll(state.tracks)
-                historyAdapter.notifyDataSetChanged()
-            }
-            is TracksSearchState.Empty -> {
-                placeholderNoResults.isVisible = true
-            }
-            is TracksSearchState.Error -> {
-                placeholderServerError.isVisible = true
-            }
-            is TracksSearchState.Default -> { // комм чтобы IDE не ругалось на пустышку
-            }
-        }
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(inputEditText.windowToken, 0)
     }
 
     private fun openPlayer(track: Track) {
@@ -191,10 +189,5 @@ class SearchActivity : AppCompatActivity() {
             putExtra(PlayerActivity.TRACK_KEY, track)
         }
         startActivity(intent)
-    }
-
-    private fun hideKeyboard() {
-        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(inputEditText.windowToken, 0)
     }
 }
