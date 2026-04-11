@@ -41,4 +41,7 @@
     <dimen name="player_artwork_corner_radius">8dp</dimen>
 
     <dimen name="margin_12dp">12dp</dimen>
+
+    <dimen name="margin_106dp">106dp</dimen>
+    <dimen name="margin_46dp">46dp</dimen>
 </resources>

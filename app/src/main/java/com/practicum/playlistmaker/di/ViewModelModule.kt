@@ -1,12 +1,14 @@
 package com.practicum.playlistmaker.di
 
+import com.practicum.playlistmaker.presentation.ui.FavoritesViewModel
 import com.practicum.playlistmaker.presentation.ui.PlayerViewModel
+import com.practicum.playlistmaker.presentation.ui.PlaylistsViewModel
 import com.practicum.playlistmaker.presentation.ui.SearchViewModel
 import com.practicum.playlistmaker.presentation.ui.SettingsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
-// Описание того, как Koin должен создавать твои ViewModel
+// Описание того, как Koin должен создавать ViewModel
 val viewModelModule = module {
 
     viewModel {
@@ -19,5 +21,13 @@ val viewModelModule = module {
 
     viewModel {
         SettingsViewModel(get(), get())
+    }
+
+    viewModel {
+        FavoritesViewModel()
+    }
+
+    viewModel {
+        PlaylistsViewModel()
     }
 }

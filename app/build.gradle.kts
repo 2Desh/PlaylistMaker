@@ -53,6 +53,9 @@ dependencies {
 
     implementation(libs.koin.android)
 
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.viewpager2)
+
     // Сеть и JSON (Retrofit + Gson)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)

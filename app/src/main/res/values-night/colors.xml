@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 <!-- Тёмная тема -->
     <!-- Основные -->
     <color name="black">#FF000000</color>
@@ -17,7 +17,7 @@
     <color name="ic_arrow_back">@color/YP_White</color>
 
     <!-- item_track.xml -->
-    <color name="light_grey">#E6E8EB</color>
+    <color name="light_grey" tools:ignore="MissingDefaultResource">#E6E8EB</color>
 
     <!-- Плейсхолдеры -->
     <color name="placeholder_base_color">@color/YP_White</color>
@@ -27,4 +27,7 @@
     <color name="playerButtonBgColor">@color/YP_Light_Gray</color>
     <color name="playerButtonColor">@color/YP_White</color>
     <color name="playerButtonPlayColor">@color/YP_White</color>
+
+    <!-- Медиатека -->
+    <color name="playlist_btn_text_color">@color/YP_Black</color>
 </resources>
