@@ -1,50 +1,57 @@
 package com.practicum.playlistmaker.presentation.ui
 
-import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
 import com.practicum.playlistmaker.R
+import com.practicum.playlistmaker.databinding.ActivityMainBinding
 
+// Основная и единственная активити
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        val rootView = findViewById<View>(R.id.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Настройка отступов для системных bar'ов
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updatePadding(
-                left = systemBars.left,
-                top = systemBars.top,
-                right = systemBars.right,
-                bottom = systemBars.bottom
-            )
+            v.updatePadding(left = systemBars.left, top = systemBars.top, right = systemBars.right)
             insets
         }
 
-        // находим кнопки
-        val searchButton = findViewById<Button>(R.id.search_button)
-        val mediaLibraryButton = findViewById<Button>(R.id.media_library_button)
-        val settingsButton = findViewById<Button>(R.id.settings_button)
+        // Navigation Component
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.main_container_view) as NavHostFragment
+        val navController = navHostFragment.navController
 
-        // назначаем обработчики нажатий
-        searchButton.setOnClickListener {
-            startActivity(Intent(this, SearchActivity::class.java))
-        }
+        binding.bottomNavigation.setupWithNavController(navController)
 
-        mediaLibraryButton.setOnClickListener {
-            startActivity(Intent(this, MediaLibraryActivity::class.java))
-        }
-
-        settingsButton.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+        // Видимость нижней панели
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                // для плеера: скрываем навигацию
+                R.id.playerFragment -> {
+                    binding.bottomNavigation.isVisible = false
+                    binding.navSeparator.isVisible = false
+                }
+                // для остальных экранов: показываем навигацию
+                else -> {
+                    binding.bottomNavigation.isVisible = true
+                    binding.navSeparator.isVisible = true
+                }
+            }
         }
     }
 }

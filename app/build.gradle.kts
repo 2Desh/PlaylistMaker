@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.google.material) // Основная библиотека для Material Design компонентов
+    implementation(libs.androidx.navigation.fragment.ktx) // Навигация во фрагментах
+    implementation(libs.androidx.navigation.ui.ktx)       // Интеграция навигации с UI
 
     implementation(libs.koin.android)
 
