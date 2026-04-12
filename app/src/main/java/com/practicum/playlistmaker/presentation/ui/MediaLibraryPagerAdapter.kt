@@ -1,0 +1,17 @@
+package com.practicum.playlistmaker.presentation.ui
+
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Lifecycle
+import androidx.viewpager2.adapter.FragmentStateAdapter
+
+// Адаптер для управления навигацией и жизненным циклом фрагментов внутри ViewPager2
+class MediaLibraryPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle) :
+    FragmentStateAdapter(fragmentManager, lifecycle) {
+
+    override fun getItemCount(): Int = 2
+
+    override fun createFragment(position: Int): Fragment {
+        return if (position == 0) FavoritesFragment.newInstance() else PlaylistsFragment.newInstance()
+    }
+}
