@@ -30,4 +30,7 @@
 
     <!-- Медиатека -->
     <color name="playlist_btn_text_color">@color/YP_Black</color>
+
+    <!-- Кнопки -->
+    <color name="bnv_inactive_color">@color/YP_White</color>
 </resources>

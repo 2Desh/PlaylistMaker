@@ -17,31 +17,16 @@
         android:theme="@style/Theme.PlaylistMaker"
         tools:targetApi="31">
 
-        <!-- титульник -->
+        <!-- Основная активити -->
         <activity
             android:name=".presentation.ui.MainActivity"
+            android:windowSoftInputMode="adjustPan"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- поиск ббтека и настройки -->
-        <activity
-            android:name=".presentation.ui.SearchActivity"
-            android:exported="true" />
-
-        <activity
-            android:name=".presentation.ui.MediaLibraryActivity"
-            android:exported="true" />
-
-        <activity
-            android:name=".presentation.ui.SettingsActivity"
-            android:exported="true" />
-
-        <activity android:name=".presentation.ui.PlayerActivity"
-            android:exported="true" />
     </application>
 
 </manifest>
