@@ -14,10 +14,10 @@ sealed interface TracksSearchState {
     data class History(val tracks: List<Track>) : TracksSearchState
 
     // Ничего не найдено
-    data class Empty(val message: String) : TracksSearchState
+    object Empty : TracksSearchState
 
     // Ошибка сети
-    data class Error(val errorMessage: String) : TracksSearchState
+    object Error : TracksSearchState
 
     // Дефолтное состояние (пустой экран, если истории еще нет)
     object Default : TracksSearchState

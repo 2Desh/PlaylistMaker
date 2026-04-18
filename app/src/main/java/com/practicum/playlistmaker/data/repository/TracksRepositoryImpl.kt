@@ -5,15 +5,18 @@ import com.practicum.playlistmaker.data.dto.TrackSearchRequest
 import com.practicum.playlistmaker.data.dto.TrackSearchResponse
 import com.practicum.playlistmaker.domain.api.TracksRepository
 import com.practicum.playlistmaker.domain.models.Track
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
-// Реализация репозитория для поиска треков. Отвечает за маппинг данных из DTO в доменные модели и обработку ошибок сети.
+// Реализация репозитория для поиска треков.
 class TracksRepositoryImpl(private val networkClient: NetworkClient) : TracksRepository {
-    override fun searchTracks(expression: String): List<Track>? {
+
+    override fun searchTracks(expression: String): Flow<List<Track>?> = flow {
         val response = networkClient.doRequest(TrackSearchRequest(expression))
 
-        return when (response.resultCode) {
+        when (response.resultCode) {
             200 -> {
-                (response as TrackSearchResponse).results.map {
+                val data = (response as TrackSearchResponse).results.map {
                     Track(
                         it.trackName ?: "",
                         it.artistName ?: "",
@@ -27,12 +30,10 @@ class TracksRepositoryImpl(private val networkClient: NetworkClient) : TracksRep
                         it.previewUrl
                     )
                 }
-            }
-            -1 -> {
-                null
+                emit(data) // отправляем данные в поток
             }
             else -> {
-                null
+                emit(null) // отправляем ошибку сети в поток
             }
         }
     }

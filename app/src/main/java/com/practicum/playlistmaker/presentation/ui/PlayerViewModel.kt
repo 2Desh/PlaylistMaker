@@ -1,11 +1,14 @@
 package com.practicum.playlistmaker.presentation.ui
 
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.practicum.playlistmaker.domain.api.AudioPlayerInteractor
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -14,37 +17,25 @@ class PlayerViewModel(
     private val audioPlayerInteractor: AudioPlayerInteractor
 ) : ViewModel() {
 
-    // _stateLiveData - приватная, её может изменять только сама ViewModel
-    private val _stateLiveData = MutableLiveData<PlayerState>(PlayerState.Default(formatTime(0)))
-    // stateLiveData - публичная, Activity может только подписываться на неё, но не менять
+    private val _stateLiveData = MutableLiveData<PlayerState>(PlayerState.Default(formatTime(DEFAULT_TIME)))
     val stateLiveData: LiveData<PlayerState> = _stateLiveData
 
-    // Переносим Handler сюда, чтобы отвязать таймер от жизненного цикла Activity
-    private val handler = Handler(Looper.getMainLooper())
-
-    // Задача обновления таймера
-    private val timerRunnable = object : Runnable {
-        override fun run() {
-            // Обновляем таймер только если состояние Playing
-            if (_stateLiveData.value is PlayerState.Playing) {
-                val currentPosition = audioPlayerInteractor.getCurrentPosition()
-                _stateLiveData.postValue(PlayerState.Playing(formatTime(currentPosition)))
-                handler.postDelayed(this, DELAY)
-            }
-        }
-    }
+    private var timerJob: Job? = null
 
     fun preparePlayer(url: String) {
+        // Защита при повороте экрана
+        if (_stateLiveData.value !is PlayerState.Default) {
+            return
+        }
+
         audioPlayerInteractor.preparePlayer(
             url = url,
             onPreparedListener = {
-                // Передаем formatTime(0)
-                _stateLiveData.postValue(PlayerState.Prepared(formatTime(0)))
+                _stateLiveData.postValue(PlayerState.Prepared(formatTime(DEFAULT_TIME)))
             },
             onCompletionListener = {
-                // Передаем formatTime(0)
-                _stateLiveData.postValue(PlayerState.Prepared(formatTime(0)))
-                handler.removeCallbacks(timerRunnable)
+                timerJob?.cancel()
+                _stateLiveData.postValue(PlayerState.Prepared(formatTime(DEFAULT_TIME)))
             }
         )
     }
@@ -52,18 +43,19 @@ class PlayerViewModel(
     private fun startPlayer() {
         audioPlayerInteractor.startPlayer()
         _stateLiveData.postValue(PlayerState.Playing(formatTime(audioPlayerInteractor.getCurrentPosition())))
-        handler.post(timerRunnable)
+        startTimer()
     }
 
     fun pausePlayer() {
         audioPlayerInteractor.pausePlayer()
+        timerJob?.cancel()
+
         val currentProgress = if (_stateLiveData.value is PlayerState.Playing) {
             (_stateLiveData.value as PlayerState.Playing).progress
         } else {
-            formatTime(0) // Заменили "00:00" на вызов функции форматирования
+            formatTime(DEFAULT_TIME)
         }
         _stateLiveData.postValue(PlayerState.Paused(currentProgress))
-        handler.removeCallbacks(timerRunnable)
     }
 
     // Обработка нажатия на кнопку Play/Pause
@@ -71,14 +63,22 @@ class PlayerViewModel(
         when (_stateLiveData.value) {
             is PlayerState.Playing -> pausePlayer()
             is PlayerState.Prepared, is PlayerState.Paused -> startPlayer()
-            else -> {}
+            else -> Unit
+        }
+    }
+
+    private fun startTimer() {
+        timerJob = viewModelScope.launch {
+            while (isActive) {
+                delay(DELAY)
+                _stateLiveData.postValue(PlayerState.Playing(formatTime(audioPlayerInteractor.getCurrentPosition())))
+            }
         }
     }
 
     // Освобождаем ресурсы
     override fun onCleared() {
         super.onCleared()
-        handler.removeCallbacks(timerRunnable)
         audioPlayerInteractor.release()
     }
 
@@ -88,5 +88,6 @@ class PlayerViewModel(
 
     companion object {
         private const val DELAY = 300L
+        private const val DEFAULT_TIME = 0
     }
 }

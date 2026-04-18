@@ -2,35 +2,19 @@ package com.practicum.playlistmaker.domain.impl
 
 import com.practicum.playlistmaker.domain.api.TracksInteractor
 import com.practicum.playlistmaker.domain.api.TracksRepository
-import com.practicum.playlistmaker.domain.api.TracksConsumer
-import java.util.concurrent.Executors
+import com.practicum.playlistmaker.domain.models.Track
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-// Управляет потоками при поиске треков в сети
+// Обрабатывает результат из репозитория
 class TracksInteractorImpl(private val repository: TracksRepository) : TracksInteractor {
 
-    private val executor = Executors.newCachedThreadPool()
-
-    override fun searchTracks(expression: String, consumer: TracksConsumer) {
-        executor.execute {
-            try {
-                val resource = repository.searchTracks(expression)
-
-                when {
-                    resource == null -> {
-                        // Нет связи
-                        consumer.consume(null, "Ошибка сети")
-                    }
-                    resource.isEmpty() -> {
-                        // Нет таких данных
-                        consumer.consume(null, "Ничего не найдено")
-                    }
-                    else -> {
-                        // Успех
-                        consumer.consume(resource, null)
-                    }
-                }
-            } catch (e: Exception) {
-                consumer.consume(null, e.message)
+    override fun searchTracks(expression: String): Flow<Pair<List<Track>?, Boolean?>> {
+        return repository.searchTracks(expression).map { resource ->
+            when {
+                resource == null -> Pair(null, true) // Ошибка сети
+                resource.isEmpty() -> Pair(emptyList(), null) // Ничего не найдено
+                else -> Pair(resource, null) // Успех
             }
         }
     }
