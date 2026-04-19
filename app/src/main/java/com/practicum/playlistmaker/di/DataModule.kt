@@ -2,7 +2,9 @@ package com.practicum.playlistmaker.di
 
 import android.content.Context
 import android.media.MediaPlayer
+import androidx.room.Room
 import com.google.gson.Gson
+import com.practicum.playlistmaker.data.db.AppDatabase
 import com.practicum.playlistmaker.data.network.ITunesApi
 import com.practicum.playlistmaker.data.network.NetworkClient
 import com.practicum.playlistmaker.data.network.RetrofitNetworkClient
@@ -11,7 +13,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-// Создание Retrofit, API, SharedPreferences, NetworkClient, Медиаплеера
+// Создание Retrofit, API, SharedPreferences, NetworkClient, Медиаплеера и Базы Данных Room
 val dataModule = module {
 
     // Экземпляр ITunesApi
@@ -35,5 +37,19 @@ val dataModule = module {
     single<NetworkClient> {
         RetrofitNetworkClient(get())
     }
+
+    // Медиаплеер
     factory { MediaPlayer() }
+
+    // БД Room
+    single {
+        Room.databaseBuilder(androidContext(), AppDatabase::class.java, "database.db")
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    // DAO
+    single {
+        get<AppDatabase>().trackDao()
+    }
 }

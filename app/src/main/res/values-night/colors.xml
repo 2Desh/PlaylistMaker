@@ -10,6 +10,7 @@
     <color name="YP_White">#FFFFFF</color>
     <color name="YP_Text_Gray">#AEAFB4</color>
     <color name="YP_Light_Gray">#E6E8EB</color>
+    <color name="YP_Red">#F56B6C</color>
 
     <!-- Иконки -->
     <color name="ic_title">#1A1B22</color>
@@ -18,6 +19,7 @@
 
     <!-- item_track.xml -->
     <color name="light_grey" tools:ignore="MissingDefaultResource">#E6E8EB</color>
+    <color name="ic_arrow_foward">@color/YP_White</color>
 
     <!-- Плейсхолдеры -->
     <color name="placeholder_base_color">@color/YP_White</color>
@@ -33,4 +35,5 @@
 
     <!-- Кнопки -->
     <color name="bnv_inactive_color">@color/YP_White</color>
+    <color name="playerLikePlaylistButtonsBgColor">#FFFFFF</color>
 </resources>

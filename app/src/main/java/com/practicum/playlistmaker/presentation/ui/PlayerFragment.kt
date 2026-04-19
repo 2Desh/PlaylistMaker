@@ -1,5 +1,6 @@
 package com.practicum.playlistmaker.presentation.ui
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +15,6 @@ import com.practicum.playlistmaker.domain.models.Track
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
-import android.os.Build
 
 // Фрагмент Аудиоплеера
 class PlayerFragment : Fragment() {
@@ -23,6 +23,8 @@ class PlayerFragment : Fragment() {
 
     private var _binding: FragmentAudioplayerBinding? = null
     private val binding get() = _binding!!
+
+    private var currentTrack: Track? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,7 +39,6 @@ class PlayerFragment : Fragment() {
 
         initViews()
 
-        // Получаем трек из arguments, переданный Navigation Component
         val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable(TRACK_KEY, Track::class.java)
         } else {
@@ -46,7 +47,11 @@ class PlayerFragment : Fragment() {
         }
 
         if (track != null) {
+            currentTrack = track
             bindTrackData(track)
+
+            // Сообщаем ViewModel текущее состояние избранного
+            viewModel.checkIsFavorite(track.isFavorite)
 
             val url = track.previewUrl
             if (!url.isNullOrEmpty()) {
@@ -57,6 +62,14 @@ class PlayerFragment : Fragment() {
         viewModel.stateLiveData.observe(viewLifecycleOwner) { state ->
             renderState(state)
         }
+
+        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
+            if (isFavorite) {
+                binding.likeButton.setImageResource(R.drawable.ic_liked)
+            } else {
+                binding.likeButton.setImageResource(R.drawable.ic_like)
+            }
+        }
     }
 
     private fun initViews() {
@@ -66,6 +79,12 @@ class PlayerFragment : Fragment() {
 
         binding.playPauseButton.setOnClickListener {
             viewModel.playbackControl()
+        }
+
+        binding.likeButton.setOnClickListener {
+            currentTrack?.let { track ->
+                viewModel.onFavoriteClicked(track)
+            }
         }
     }
 

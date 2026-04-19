@@ -8,7 +8,7 @@
     android:paddingTop="@dimen/tiny_padding"
     android:paddingBottom="@dimen/tiny_padding"
     android:paddingStart="13dp"
-    android:paddingEnd="20dp"
+    android:paddingEnd="@dimen/padding_12dp"
     android:gravity="center_vertical">
 
     <ImageView
@@ -75,4 +75,12 @@
         tools:text="5:01" />
     </LinearLayout>
 </LinearLayout>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:src="@drawable/ic_arrow_foward"
+        tools:ignore="ContentDescription" />
+
 </LinearLayout>

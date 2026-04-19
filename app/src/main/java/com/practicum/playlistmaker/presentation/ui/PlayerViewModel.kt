@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.practicum.playlistmaker.domain.api.AudioPlayerInteractor
+import com.practicum.playlistmaker.domain.api.FavoriteTracksInteractor
+import com.practicum.playlistmaker.domain.models.Track
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -14,11 +16,15 @@ import java.util.Locale
 
 // Вьювка плеера. Инкапсулирует логику воспроизведения, управление таймером прогресса и форматирование времени.
 class PlayerViewModel(
-    private val audioPlayerInteractor: AudioPlayerInteractor
+    private val audioPlayerInteractor: AudioPlayerInteractor,
+    private val favoriteTracksInteractor: FavoriteTracksInteractor
 ) : ViewModel() {
 
     private val _stateLiveData = MutableLiveData<PlayerState>(PlayerState.Default(formatTime(DEFAULT_TIME)))
     val stateLiveData: LiveData<PlayerState> = _stateLiveData
+
+    private val _isFavorite = MutableLiveData<Boolean>()
+    val isFavorite: LiveData<Boolean> = _isFavorite
 
     private var timerJob: Job? = null
 
@@ -73,6 +79,23 @@ class PlayerViewModel(
             while (isActive) {
                 delay(DELAY)
                 _stateLiveData.postValue(PlayerState.Playing(formatTime(audioPlayerInteractor.getCurrentPosition())))
+            }
+        }
+    }
+
+    fun checkIsFavorite(isFavorite: Boolean) {
+        _isFavorite.value = isFavorite
+    }
+
+    fun onFavoriteClicked(track: Track) {
+        viewModelScope.launch {
+            val isFav = _isFavorite.value ?: false
+            if (isFav) {
+                favoriteTracksInteractor.deleteTrack(track)
+                _isFavorite.postValue(false)
+            } else {
+                favoriteTracksInteractor.insertTrack(track)
+                _isFavorite.postValue(true)
             }
         }
     }

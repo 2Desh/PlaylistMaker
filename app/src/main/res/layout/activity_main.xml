@@ -29,6 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:attr/windowBackground"
+        app:itemPaddingTop="@dimen/tiny_padding"
         app:itemIconSize="24dp"
         app:itemIconTint="@color/bnv_colors"
         app:itemTextColor="@color/bnv_colors"
