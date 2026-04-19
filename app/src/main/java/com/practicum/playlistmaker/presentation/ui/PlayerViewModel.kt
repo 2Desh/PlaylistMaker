@@ -68,6 +68,7 @@ class PlayerViewModel(
     }
 
     private fun startTimer() {
+        timerJob?.cancel()
         timerJob = viewModelScope.launch {
             while (isActive) {
                 delay(DELAY)

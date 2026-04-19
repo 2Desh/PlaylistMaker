@@ -21,10 +21,10 @@ class SearchViewModel(
     val stateLiveData: LiveData<TracksSearchState> = _stateLiveData
 
     private var latestSearchText: String? = null
-    private var isClickAllowed = true
 
     // Job для отложенного поиска
     private var searchJob: Job? = null
+    private var clickJob: Job? = null
 
     // При старте проверяем, есть ли инфа в истории
     init {
@@ -98,15 +98,13 @@ class SearchViewModel(
     }
 
     fun clickDebounce(): Boolean {
-        val current = isClickAllowed
+        val isClickAllowed = clickJob?.isActive != true
         if (isClickAllowed) {
-            isClickAllowed = false
-            viewModelScope.launch {
+            clickJob = viewModelScope.launch {
                 delay(CLICK_DEBOUNCE_DELAY)
-                isClickAllowed = true
             }
         }
-        return current
+        return isClickAllowed
     }
 
     // Вызовется, когда пользователь нажмёт кнопку Обновить (при ошибке сети)
