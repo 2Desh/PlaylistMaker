@@ -18,9 +18,8 @@ class FavoriteTracksRepositoryImpl(
         appDatabase.trackDao().insertTrack(trackEntity)
     }
 
-    override suspend fun deleteTrack(track: Track) {
-        val trackEntity = trackDbConvertor.map(track)
-        appDatabase.trackDao().deleteTrack(trackEntity)
+    override suspend fun deleteTrack(trackId: Long) {
+        appDatabase.trackDao().deleteTrack(trackId)
     }
 
     override fun getFavoriteTracks(): Flow<List<Track>> {

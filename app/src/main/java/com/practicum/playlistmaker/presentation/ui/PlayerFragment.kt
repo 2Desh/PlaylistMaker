@@ -5,13 +5,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.databinding.FragmentAudioplayerBinding
 import com.practicum.playlistmaker.domain.models.Track
+import com.practicum.playlistmaker.presentation.adapters.BottomSheetPlaylistAdapter
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -25,6 +28,7 @@ class PlayerFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var currentTrack: Track? = null
+    private var bottomSheetAdapter: BottomSheetPlaylistAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,6 +42,7 @@ class PlayerFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initViews()
+        setupBottomSheet()
 
         val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable(TRACK_KEY, Track::class.java)
@@ -53,23 +58,15 @@ class PlayerFragment : Fragment() {
             // Сообщаем ViewModel текущее состояние избранного
             viewModel.checkIsFavorite(track.isFavorite)
 
+            viewModel.setTrackId(track.trackId)
+
             val url = track.previewUrl
             if (!url.isNullOrEmpty()) {
                 viewModel.preparePlayer(url)
             }
         }
 
-        viewModel.stateLiveData.observe(viewLifecycleOwner) { state ->
-            renderState(state)
-        }
-
-        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
-            if (isFavorite) {
-                binding.likeButton.setImageResource(R.drawable.ic_liked)
-            } else {
-                binding.likeButton.setImageResource(R.drawable.ic_like)
-            }
-        }
+        observeViewModel()
     }
 
     private fun initViews() {
@@ -84,6 +81,85 @@ class PlayerFragment : Fragment() {
         binding.likeButton.setOnClickListener {
             currentTrack?.let { track ->
                 viewModel.onFavoriteClicked(track)
+            }
+        }
+    }
+
+    private fun setupBottomSheet() {
+        val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet).apply {
+            state = BottomSheetBehavior.STATE_HIDDEN
+        }
+
+        bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                when (newState) {
+                    BottomSheetBehavior.STATE_HIDDEN -> _binding?.overlay?.visibility = View.GONE
+                    else -> _binding?.overlay?.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                _binding?.overlay?.alpha = slideOffset + 1f
+            }
+        })
+
+        binding.addPlaylistButton.setOnClickListener {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
+
+        binding.newPlaylistBottomSheetButton.setOnClickListener {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            findNavController().navigate(R.id.playlistCreateFragment)
+        }
+
+        bottomSheetAdapter = BottomSheetPlaylistAdapter(emptyList()) { playlist ->
+            currentTrack?.let { track ->
+                viewModel.addTrackToPlaylist(playlist, track)
+            }
+        }
+        binding.playlistsBottomSheetRecyclerView.adapter = bottomSheetAdapter
+    }
+
+    private fun observeViewModel() {
+        // Подписка на состояния плеера
+        viewModel.stateLiveData.observe(viewLifecycleOwner) { state ->
+            renderState(state)
+        }
+
+        // Подписка на статус избранного
+        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
+            if (isFavorite) {
+                binding.likeButton.setImageResource(R.drawable.ic_liked)
+            } else {
+                binding.likeButton.setImageResource(R.drawable.ic_like)
+            }
+        }
+        viewModel.isAddedToPlaylist.observe(viewLifecycleOwner) { isAdded ->
+            if (isAdded) {
+                // Если трек есть хотя бы в одном плейлисте, отображаем соответствующую иконку.
+                binding.addPlaylistButton.setImageResource(R.drawable.ic_added_to_playlist)
+            } else {
+                binding.addPlaylistButton.setImageResource(R.drawable.ic_add_to_playlist)
+            }
+        }
+        // Подписка на список плейлистов
+        viewModel.playlistsLiveData.observe(viewLifecycleOwner) { playlists ->
+            bottomSheetAdapter?.playlists = playlists
+            bottomSheetAdapter?.notifyDataSetChanged()
+        }
+
+        // Подписка на сообщения о добавлении трека
+        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
+            if (message.isNotEmpty()) {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+
+                // Если трек успешно добавлен, прячем шторку
+                if (message.startsWith("Добавлено")) {
+                    val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+                }
+
+                viewModel.toastMessageShown()
             }
         }
     }
@@ -143,6 +219,7 @@ class PlayerFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        bottomSheetAdapter = null
     }
 
     companion object {

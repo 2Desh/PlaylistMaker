@@ -36,4 +36,16 @@
     <!-- Кнопки -->
     <color name="bnv_inactive_color">@color/YP_White</color>
     <color name="playerLikePlaylistButtonsBgColor">#FFFFFF</color>
+    <color name="edit_text_color">@color/YP_White</color>
+    <color name="edit_text_stroke_color">@color/YP_White</color>
+
+    <!-- Bottom Sheet -->
+    <color name="bottom_sheet_bg_color">@color/YP_Black</color>
+    <color name="bottom_sheet_handle_color">@color/YP_White</color>
+    <color name="bottom_sheet_title_color">@color/YP_White</color>
+    <color name="new_playlist_btn_bg_color">@color/YP_White</color>
+    <color name="new_playlist_btn_text_color">@color/YP_Black</color>
+    <color name="playlist_item_title_color">@color/YP_White</color>
+    <color name="playlist_item_count_color">@color/YP_White</color>
+
 </resources>

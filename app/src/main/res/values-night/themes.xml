@@ -9,4 +9,23 @@
     <style name="Theme.ActivityMain" parent="Theme.PlaylistMaker">
         <item name="android:background">@color/YP_Black</item>
     </style>
+
+    <style name="CustomAlertDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="android:background">@android:color/white</item>
+        <item name="colorSurface">@android:color/white</item>
+
+        <item name="colorOnSurface">@android:color/black</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:textColorSecondary">@android:color/black</item>
+
+        <item name="buttonBarPositiveButtonStyle">@style/CustomAlertButtonText</item>
+        <item name="buttonBarNegativeButtonStyle">@style/CustomAlertButtonText</item>
+        <item name="buttonBarNeutralButtonStyle">@style/CustomAlertButtonText</item>
+    </style>
+
+    <style name="CustomAlertButtonText" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/YP_Blue</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="fontFamily">@font/ys_display_medium</item>
+    </style>
 </resources>
