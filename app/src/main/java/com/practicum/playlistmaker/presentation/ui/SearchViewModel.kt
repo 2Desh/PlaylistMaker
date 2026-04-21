@@ -1,13 +1,15 @@
 package com.practicum.playlistmaker.presentation.ui
 
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.practicum.playlistmaker.domain.api.SearchHistoryInteractor
 import com.practicum.playlistmaker.domain.api.TracksInteractor
 import com.practicum.playlistmaker.domain.models.Track
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // Вьювка экрана поиска. Управляет сетевыми запросами, дебаунсом и взаимодействием с историей поиска
 class SearchViewModel(
@@ -18,18 +20,13 @@ class SearchViewModel(
     private val _stateLiveData = MutableLiveData<TracksSearchState>()
     val stateLiveData: LiveData<TracksSearchState> = _stateLiveData
 
-    private val handler = Handler(Looper.getMainLooper())
-
     private var latestSearchText: String? = null
-    private var isClickAllowed = true
 
-    // Задача для поиска с задержкой (Debounce)
-    private val searchRunnable = Runnable {
-        val newSearchText = latestSearchText ?: ""
-        searchRequest(newSearchText)
-    }
+    // Job для отложенного поиска
+    private var searchJob: Job? = null
+    private var clickJob: Job? = null
 
-    // При старте проверяем, есть ли что-то в истории
+    // При старте проверяем, есть ли инфа в истории
     init {
         showHistory()
     }
@@ -39,36 +36,45 @@ class SearchViewModel(
             return // Защита от лишних вызовов при повороте экрана
         }
         latestSearchText = changedText
-        handler.removeCallbacks(searchRunnable)
-        handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
+
+        // Отменяем предыдущую задачу поиска, если юзер продолжает вводить текст
+        searchJob?.cancel()
+
+        // Запускаем новую задачу с задержкой
+        searchJob = viewModelScope.launch {
+            delay(SEARCH_DEBOUNCE_DELAY)
+            searchRequest(changedText)
+        }
     }
 
     fun searchRequest(newSearchText: String) {
         if (newSearchText.isEmpty()) return
 
-        // Показываем ProgressBar
         _stateLiveData.postValue(TracksSearchState.Loading)
 
-        tracksInteractor.searchTracks(newSearchText) { foundTracks, errorMessage ->
-            // Ответ пришел (возможно, в фоновом потоке, поэтому используем postValue)
-            if (errorMessage != null) {
-                if (errorMessage == "Ничего не найдено") {
-                    _stateLiveData.postValue(TracksSearchState.Empty(errorMessage))
-                } else {
-                    _stateLiveData.postValue(TracksSearchState.Error(errorMessage))
-                }
-            } else if (foundTracks != null) {
-                if (foundTracks.isEmpty()) {
-                    _stateLiveData.postValue(TracksSearchState.Empty("Ничего не найдено"))
-                } else {
-                    _stateLiveData.postValue(TracksSearchState.Content(foundTracks))
+        viewModelScope.launch {
+            tracksInteractor.searchTracks(newSearchText).collect { pair ->
+                val foundTracks = pair.first
+                val isNetworkError = pair.second
+
+                when {
+                    isNetworkError == true -> {
+                        _stateLiveData.postValue(TracksSearchState.Error)
+                    }
+                    foundTracks != null -> {
+                        if (foundTracks.isEmpty()) {
+                            _stateLiveData.postValue(TracksSearchState.Empty)
+                        } else {
+                            _stateLiveData.postValue(TracksSearchState.Content(foundTracks))
+                        }
+                    }
                 }
             }
         }
     }
 
     fun showHistory() {
-        handler.removeCallbacks(searchRunnable)
+        searchJob?.cancel()
         val history = searchHistoryInteractor.getHistory()
         if (history.isNotEmpty()) {
             _stateLiveData.postValue(TracksSearchState.History(history))
@@ -92,23 +98,19 @@ class SearchViewModel(
     }
 
     fun clickDebounce(): Boolean {
-        val current = isClickAllowed
+        val isClickAllowed = clickJob?.isActive != true
         if (isClickAllowed) {
-            isClickAllowed = false
-            handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
+            clickJob = viewModelScope.launch {
+                delay(CLICK_DEBOUNCE_DELAY)
+            }
         }
-        return current
+        return isClickAllowed
     }
 
     // Вызовется, когда пользователь нажмёт кнопку Обновить (при ошибке сети)
     fun refreshSearch() {
         val text = latestSearchText ?: ""
         searchRequest(text)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        handler.removeCallbacksAndMessages(null)
     }
 
     companion object {

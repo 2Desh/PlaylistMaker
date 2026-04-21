@@ -1,5 +1,6 @@
 package com.practicum.playlistmaker.presentation.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -101,6 +102,7 @@ class SearchFragment : Fragment() {
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun observeViewModel() {
         viewModel.stateLiveData.observe(viewLifecycleOwner) { state ->
             hideAllViews()
@@ -120,7 +122,8 @@ class SearchFragment : Fragment() {
                     historyTracks.addAll(state.tracks)
                     historyAdapter.notifyDataSetChanged()
                 }
-                else -> Unit
+                is TracksSearchState.Default -> { //
+                }
             }
         }
     }

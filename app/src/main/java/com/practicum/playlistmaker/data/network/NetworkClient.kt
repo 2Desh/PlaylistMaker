@@ -4,5 +4,5 @@ import com.practicum.playlistmaker.data.dto.Response
 
 // общий интерфейс для выполнения сетевых запросов
 fun interface NetworkClient {
-    fun doRequest(dto: Any): Response
+    suspend fun doRequest(dto: Any): Response
 }

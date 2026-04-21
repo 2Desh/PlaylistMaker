@@ -15,7 +15,8 @@ data class Track(
     val releaseDate: String?,       // Год релиза
     val primaryGenreName: String?,  // Жанр
     val country: String?,            // Страна
-    val previewUrl: String? = null   //
+    val previewUrl: String? = null,   // Превью
+    var isFavorite: Boolean = false  // Лайк
 ) : Parcelable {
     // Функция для получения ссылки на обложку
     fun getCoverArtwork() = artworkUrl100.replaceAfterLast('/', "512x512bb.jpg")
