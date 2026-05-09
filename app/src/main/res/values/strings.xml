@@ -47,4 +47,18 @@
     <string name="new_playlist_button">Новый плейлист</string>
     <string name="no_playlist">Вы не создали\n ни одного плейлиста</string>
     <string name="default_timer">00:00</string>
+    <string name="add_to_playlist_title">Добавить в плейлист</string>
+    <string name="playlist_name_hint">Название*</string>
+    <string name="playlist_description_hint">Описание</string>
+    <string name="create_playlist_button">Создать</string>
+    <string name="playlist_created">Плейлист %1$s создан</string>
+    <string name="added_to_playlist">Добавлено в плейлист %1$s</string>
+    <string name="already_added_to_playlist">Трек уже добавлен в плейлист %1$s</string>
+
+    <plurals name="tracks_count">
+        <item quantity="one">%1$d трек</item>
+        <item quantity="few">%1$d трека</item>
+        <item quantity="many">%1$d треков</item>
+        <item quantity="other">%1$d треков</item>
+    </plurals>
 </resources>

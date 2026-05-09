@@ -22,4 +22,6 @@ val repositoryModule = module {
     factory { TrackDbConvertor() } // Конвертер для БД
 
     single<FavoriteTracksRepository> { FavoriteTracksRepositoryImpl(get(), get()) } // Репозиторий избранных треков
+
+    single<FavoritePlaylistsRepository> { FavoritePlaylistsRepositoryImpl(get(), get(), get()) }
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
@@ -21,18 +22,45 @@
         android:textSize="14sp"
         app:cornerRadius="54dp" />
 
-    <ImageView
-        android:layout_width="@dimen/placeholder_def_size"
-        android:layout_height="@dimen/placeholder_def_size"
-        android:layout_marginTop="@dimen/margin_46dp"
-        android:contentDescription="@string/no_playlist"
-        android:src="@drawable/placeholder_no_results" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="16dp">
 
-    <TextView
-        style="@style/PlaceholderTextStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_16dp"
-        android:text="@string/no_playlist"
-        android:textAlignment="center" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            android:visibility="gone"
+            tools:listitem="@layout/item_playlist" />
+
+        <LinearLayout
+            android:id="@+id/placeholderLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <ImageView
+                android:layout_width="@dimen/placeholder_def_size"
+                android:layout_height="@dimen/placeholder_def_size"
+                android:layout_marginTop="@dimen/margin_46dp"
+                android:contentDescription="@string/no_playlist"
+                android:src="@drawable/placeholder_no_results" />
+
+            <TextView
+                style="@style/PlaceholderTextStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_16dp"
+                android:text="@string/no_playlist"
+                android:textAlignment="center" />
+        </LinearLayout>
+
+    </FrameLayout>
+
 </LinearLayout>

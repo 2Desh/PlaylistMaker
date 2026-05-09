@@ -14,8 +14,8 @@ class FavoriteTracksInteractorImpl(
         favoriteTracksRepository.insertTrack(track)
     }
 
-    override suspend fun deleteTrack(track: Track) {
-        favoriteTracksRepository.deleteTrack(track)
+    override suspend fun deleteTrack(trackId: Long) {
+        favoriteTracksRepository.deleteTrack(trackId)
     }
 
     override fun getFavoriteTracks(): Flow<List<Track>> {

@@ -41,8 +41,8 @@ class MainActivity : AppCompatActivity() {
         // Видимость нижней панели
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                // для плеера: скрываем навигацию
-                R.id.playerFragment -> {
+                // Скрываем навигацию для плеера и при создании плейлистов
+                R.id.playerFragment, R.id.playlistCreateFragment -> {
                     binding.bottomNavigation.isVisible = false
                     binding.navSeparator.isVisible = false
                 }

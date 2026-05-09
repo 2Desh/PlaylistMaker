@@ -12,6 +12,9 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.practicum.playlistmaker.data.db.PlaylistDbConvertor
+import com.practicum.playlistmaker.data.db.impl.FavoritePlaylistsRepositoryImpl
+import com.practicum.playlistmaker.domain.api.FavoritePlaylistsRepository
 
 // Создание Retrofit, API, SharedPreferences, NetworkClient, Медиаплеера и Базы Данных Room
 val dataModule = module {
@@ -51,5 +54,17 @@ val dataModule = module {
     // DAO
     single {
         get<AppDatabase>().trackDao()
+    }
+
+    // DAO для плейлистов
+    single { get<AppDatabase>().playlistDao() }
+
+    // Конвертер
+    factory { PlaylistDbConvertor(get()) }
+
+    single { get<AppDatabase>().playlistTrackDao() }
+
+    single<FavoritePlaylistsRepository> {
+        FavoritePlaylistsRepositoryImpl(get(), get(), get())
     }
 }
