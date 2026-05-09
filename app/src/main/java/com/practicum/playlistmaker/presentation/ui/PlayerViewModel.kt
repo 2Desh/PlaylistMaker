@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.domain.api.AudioPlayerInteractor
 import com.practicum.playlistmaker.domain.api.FavoritePlaylistsInteractor
 import com.practicum.playlistmaker.domain.api.FavoriteTracksInteractor
@@ -35,8 +36,8 @@ class PlayerViewModel(
     private val _isAddedToPlaylist = MutableLiveData<Boolean>()
     val isAddedToPlaylist: LiveData<Boolean> = _isAddedToPlaylist
 
-    private val _toastMessage = MutableLiveData<String>()
-    val toastMessage: LiveData<String> = _toastMessage
+    private val _toastMessage = MutableLiveData<Pair<Int, String>?>()
+    val toastMessage: LiveData<Pair<Int, String>?> = _toastMessage
 
     private var timerJob: Job? = null
 
@@ -136,15 +137,15 @@ class PlayerViewModel(
         viewModelScope.launch {
             val isAdded = playlistsInteractor.addTrackToPlaylist(track, playlist)
             if (isAdded) {
-                _toastMessage.postValue("Добавлено в плейлист ${playlist.name}")
+                _toastMessage.postValue(Pair(R.string.added_to_playlist, playlist.name))
             } else {
-                _toastMessage.postValue("Трек уже добавлен в плейлист ${playlist.name}")
+                _toastMessage.postValue(Pair(R.string.already_added_to_playlist, playlist.name))
             }
         }
     }
 
     fun toastMessageShown() {
-        _toastMessage.value = ""
+        _toastMessage.value = null
     }
 
     // Освобождаем ресурсы

@@ -21,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.practicum.playlistmaker.R
@@ -71,11 +72,13 @@ class PlaylistCreateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                checkUnsavedDataAndExit()
-            }
-        })
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    checkUnsavedDataAndExit()
+                }
+            })
 
         updateInputLayoutColor(binding.nameInputLayout, false)
         updateInputLayoutColor(binding.descriptionInputLayout, false)
@@ -88,7 +91,8 @@ class PlaylistCreateFragment : Fragment() {
             // Кнопка
             binding.createButton.isEnabled = isNameFilled
             val btnColorRes = if (isNameFilled) R.color.YP_Blue else R.color.YP_Text_Gray
-            binding.createButton.backgroundTintList = ContextCompat.getColorStateList(requireContext(), btnColorRes)
+            binding.createButton.backgroundTintList =
+                ContextCompat.getColorStateList(requireContext(), btnColorRes)
 
             // Обводка
             updateInputLayoutColor(binding.nameInputLayout, isNameFilled)
@@ -118,10 +122,17 @@ class PlaylistCreateFragment : Fragment() {
             val imagePath = selectedUri?.let { saveImageToPrivateStorage(it) }
 
             viewModel.createPlaylist(name, description, imagePath)
-
-            Toast.makeText(requireContext(), "Плейлист $name создан", Toast.LENGTH_SHORT).show()
-            findNavController().navigateUp()
         }
+
+        // Подписка на успешное сохранение плейлиста
+        viewModel.isSaved.observe(viewLifecycleOwner, Observer { isSaved ->
+            if (isSaved) {
+                val name = binding.nameEditText.text.toString()
+                val message = getString(R.string.playlist_created, name)
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                findNavController().navigateUp()
+            }
+        })
     }
 
     private fun updateInputLayoutColor(inputLayout: com.google.android.material.textfield.TextInputLayout, isFilled: Boolean) {
@@ -149,9 +160,7 @@ class PlaylistCreateFragment : Fragment() {
         binding.descriptionInputLayout.defaultHintTextColor = defaultHintColor
     }
 
-
     // Проверка разрешений на доступ к фото
-
     private fun checkAndRequestImagePermission() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
@@ -185,21 +194,27 @@ class PlaylistCreateFragment : Fragment() {
         pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
 
-    private fun saveImageToPrivateStorage(uri: Uri): String {
+    private fun saveImageToPrivateStorage(uri: Uri): String? {
         val filePath = File(requireActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES), "myalbum")
         if (!filePath.exists()) {
             filePath.mkdirs()
         }
 
         val file = File(filePath, "cover_${System.currentTimeMillis()}.jpg")
-        val inputStream = requireActivity().contentResolver.openInputStream(uri)
-        val outputStream = FileOutputStream(file)
 
-        BitmapFactory
-            .decodeStream(inputStream)
-            ?.compress(Bitmap.CompressFormat.JPEG, 30, outputStream)
-
-        return file.absolutePath
+        return try {
+            requireActivity().contentResolver.openInputStream(uri)?.use { inputStream ->
+                FileOutputStream(file).use { outputStream ->
+                    BitmapFactory
+                        .decodeStream(inputStream)
+                        ?.compress(Bitmap.CompressFormat.JPEG, 30, outputStream)
+                }
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     private fun checkUnsavedDataAndExit() {

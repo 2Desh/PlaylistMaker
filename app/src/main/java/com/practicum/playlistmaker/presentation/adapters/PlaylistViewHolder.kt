@@ -21,7 +21,7 @@ class PlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         nameText.text = playlist.name
 
         // Вспомогательный метод для правильного склонения слова "трек"
-        countText.text = getTracksString(playlist.trackCount)
+        countText.text = itemView.resources.getQuantityString(R.plurals.tracks_count, playlist.trackCount, playlist.trackCount)
 
         // Загрузка обложки
         if (!playlist.coverFilePath.isNullOrEmpty()) {
@@ -40,16 +40,4 @@ class PlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         }
     }
 
-    // Логика для склонения (1 трек, 2 трека, 5 треков)
-    private fun getTracksString(count: Int): String {
-        val lastDigit = count % 10
-        val lastTwoDigits = count % 100
-
-        return when {
-            lastTwoDigits in 11..19 -> "$count треков"
-            lastDigit == 1 -> "$count трек"
-            lastDigit in 2..4 -> "$count трека"
-            else -> "$count треков"
-        }
-    }
 }

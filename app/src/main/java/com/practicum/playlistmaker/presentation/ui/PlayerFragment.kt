@@ -149,12 +149,13 @@ class PlayerFragment : Fragment() {
         }
 
         // Подписка на сообщения о добавлении трека
-        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
-            if (message.isNotEmpty()) {
+        viewModel.toastMessage.observe(viewLifecycleOwner) { messageData ->
+            if (messageData != null) {
+                val message = getString(messageData.first, messageData.second)
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 
                 // Если трек успешно добавлен, прячем шторку
-                if (message.startsWith("Добавлено")) {
+                if (messageData.first == R.string.added_to_playlist) {
                     val bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
                 }

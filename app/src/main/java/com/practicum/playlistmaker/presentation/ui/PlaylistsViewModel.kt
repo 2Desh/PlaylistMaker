@@ -16,10 +16,6 @@ class PlaylistsViewModel(
     val stateLiveData: LiveData<PlaylistsState> = _stateLiveData
 
     init {
-        fillData()
-    }
-
-    fun fillData() {
         viewModelScope.launch {
             interactor.getPlaylists().collect { playlists ->
                 if (playlists.isEmpty()) {

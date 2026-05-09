@@ -33,7 +33,7 @@ class PlaylistsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // TODO
-        adapter = PlaylistAdapter(emptyList()) { playlist ->
+        adapter = PlaylistAdapter(emptyList()) { _ ->
         }
 
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
@@ -48,12 +48,6 @@ class PlaylistsFragment : Fragment() {
         viewModel.stateLiveData.observe(viewLifecycleOwner) { state ->
             render(state)
         }
-    }
-
-    // Обновляем данные каждый раз, когда возвращаемся на экран
-    override fun onResume() {
-        super.onResume()
-        viewModel.fillData()
     }
 
     private fun render(state: PlaylistsState) {

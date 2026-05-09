@@ -5,11 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.practicum.playlistmaker.domain.api.FavoritePlaylistsInteractor
 import com.practicum.playlistmaker.domain.models.Playlist
 import kotlinx.coroutines.launch
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 
 // Логика создания плейлиста
 class PlaylistCreateViewModel(
     private val playlistsInteractor: FavoritePlaylistsInteractor
 ) : ViewModel() {
+
+    private val _isSaved = MutableLiveData<Boolean>()
+    val isSaved: LiveData<Boolean> = _isSaved
 
     fun createPlaylist(name: String, description: String, coverPath: String?) {
         viewModelScope.launch {
@@ -21,6 +26,7 @@ class PlaylistCreateViewModel(
                 trackCount = 0
             )
             playlistsInteractor.insertPlaylist(playlist)
+            _isSaved.postValue(true)
         }
     }
 }

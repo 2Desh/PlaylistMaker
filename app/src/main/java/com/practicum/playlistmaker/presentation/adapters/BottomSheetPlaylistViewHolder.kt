@@ -19,7 +19,7 @@ class BottomSheetPlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(it
 
     fun bind(playlist: Playlist) {
         nameText.text = playlist.name
-        countText.text = getTracksString(playlist.trackCount)
+        countText.text = itemView.resources.getQuantityString(R.plurals.tracks_count, playlist.trackCount, playlist.trackCount)
 
         if (!playlist.coverFilePath.isNullOrEmpty()) {
             val file = File(playlist.coverFilePath)
@@ -34,17 +34,6 @@ class BottomSheetPlaylistViewHolder(itemView: View) : RecyclerView.ViewHolder(it
             }
         } else {
             coverImage.setImageResource(R.drawable.placeholder)
-        }
-    }
-
-    private fun getTracksString(count: Int): String {
-        val lastDigit = count % 10
-        val lastTwoDigits = count % 100
-        return when {
-            lastTwoDigits in 11..19 -> "$count треков"
-            lastDigit == 1 -> "$count трек"
-            lastDigit in 2..4 -> "$count трека"
-            else -> "$count треков"
         }
     }
 }
