@@ -11,19 +11,14 @@ class FavoritePlaylistsInteractorImpl(
     private val repository: FavoritePlaylistsRepository
 ) : FavoritePlaylistsInteractor {
 
-    override suspend fun insertPlaylist(playlist: Playlist) {
-        repository.insertPlaylist(playlist)
-    }
-
-    override suspend fun updatePlaylist(playlist: Playlist) {
-        repository.updatePlaylist(playlist)
-    }
-
-    override fun getPlaylists(): Flow<List<Playlist>> {
-        return repository.getPlaylists()
-    }
-
-    override suspend fun addTrackToPlaylist(track: Track, playlist: Playlist): Boolean {
-        return repository.addTrackToPlaylist(track, playlist)
+    override suspend fun insertPlaylist(playlist: Playlist) { repository.insertPlaylist(playlist) }
+    override suspend fun updatePlaylist(playlist: Playlist) { repository.updatePlaylist(playlist) }
+    override fun getPlaylists(): Flow<List<Playlist>> { return repository.getPlaylists() }
+    override suspend fun addTrackToPlaylist(track: Track, playlist: Playlist): Boolean { return repository.addTrackToPlaylist(track, playlist) }
+    override fun getPlaylistById(id: Long): Flow<Playlist?> = repository.getPlaylistById(id)
+    override fun getTracksForPlaylist(trackIds: List<Long>): Flow<List<Track>> = repository.getTracksForPlaylist(trackIds)
+    override suspend fun deleteTrackFromPlaylist(trackId: Long, playlistId: Long) = repository.deleteTrackFromPlaylist(trackId, playlistId)
+    override suspend fun deletePlaylist(id: Long) {
+        repository.deletePlaylist(id)
     }
 }

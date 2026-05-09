@@ -47,6 +47,6 @@
     <color name="new_playlist_btn_text_color">@color/YP_White</color>
     <color name="playlist_item_title_color">@color/YP_Black</color>
     <color name="playlist_item_count_color">@color/YP_Text_Gray</color>
-
+    <color name="bottom_sheet_subtitle">@color/YP_Text_Gray</color>
 
 </resources>

@@ -8,6 +8,7 @@ import com.practicum.playlistmaker.presentation.ui.SearchViewModel
 import com.practicum.playlistmaker.presentation.ui.SettingsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
+import com.practicum.playlistmaker.presentation.ui.PlaylistViewModel
 
 // Описание того, как Koin должен создавать ViewModel
 val viewModelModule = module {
@@ -34,5 +35,9 @@ val viewModelModule = module {
 
     viewModel {
         PlaylistCreateViewModel(get())
+    }
+
+    viewModel { (playlistId: Long) ->
+        PlaylistViewModel(playlistId, get())
     }
 }

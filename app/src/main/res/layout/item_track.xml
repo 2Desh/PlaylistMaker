@@ -51,7 +51,7 @@
             android:layout_weight="1"
             android:fontFamily="@font/ys_display_regular"
             android:textSize="@dimen/text_size_11sp"
-            android:textColor="@color/YP_Text_Gray"
+            android:textColor="@color/bottom_sheet_subtitle"
             android:singleLine="true"
             android:ellipsize="end"
             tools:text="Author"
@@ -71,7 +71,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/ys_display_regular"
         android:textSize="@dimen/text_size_11sp"
-        android:textColor="@color/YP_Text_Gray"
+        android:textColor="@color/bottom_sheet_subtitle"
         tools:text="5:01" />
     </LinearLayout>
 </LinearLayout>

@@ -49,21 +49,29 @@ class SearchFragment : Fragment() {
     }
 
     private fun setupAdapters() {
-        trackAdapter = TrackAdapter(tracks) { track ->
-            if (viewModel.clickDebounce()) {
-                viewModel.addToHistory(track)
-                openPlayer(track)
+        // Указываем имена параметров для основного адаптера
+        trackAdapter = TrackAdapter(
+            tracks = tracks,
+            onTrackClickListener = { track ->
+                if (viewModel.clickDebounce()) {
+                    viewModel.addToHistory(track)
+                    openPlayer(track)
+                }
             }
-        }
+        )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = trackAdapter
 
-        historyAdapter = TrackAdapter(historyTracks) { track ->
-            if (viewModel.clickDebounce()) {
-                viewModel.addToHistory(track)
-                openPlayer(track)
+        // Указываем имена параметров для адаптера истории
+        historyAdapter = TrackAdapter(
+            tracks = historyTracks,
+            onTrackClickListener = { track ->
+                if (viewModel.clickDebounce()) {
+                    viewModel.addToHistory(track)
+                    openPlayer(track)
+                }
             }
-        }
+        )
         binding.historyRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.historyRecyclerView.adapter = historyAdapter
     }

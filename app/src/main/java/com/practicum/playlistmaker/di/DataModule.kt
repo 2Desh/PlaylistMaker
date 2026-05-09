@@ -13,8 +13,8 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.practicum.playlistmaker.data.db.PlaylistDbConvertor
-import com.practicum.playlistmaker.data.db.impl.FavoritePlaylistsRepositoryImpl
 import com.practicum.playlistmaker.domain.api.FavoritePlaylistsRepository
+import com.practicum.playlistmaker.data.repository.FavoritePlaylistsRepositoryImpl 
 
 // Создание Retrofit, API, SharedPreferences, NetworkClient, Медиаплеера и Базы Данных Room
 val dataModule = module {

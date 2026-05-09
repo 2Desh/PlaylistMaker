@@ -1,14 +1,14 @@
 package com.practicum.playlistmaker.presentation.ui
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.practicum.playlistmaker.domain.api.FavoritePlaylistsInteractor
 import com.practicum.playlistmaker.domain.models.Playlist
 import kotlinx.coroutines.launch
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 
-// Логика создания плейлиста
+// Логика создания и редактирования плейлиста
 class PlaylistCreateViewModel(
     private val playlistsInteractor: FavoritePlaylistsInteractor
 ) : ViewModel() {
@@ -16,6 +16,7 @@ class PlaylistCreateViewModel(
     private val _isSaved = MutableLiveData<Boolean>()
     val isSaved: LiveData<Boolean> = _isSaved
 
+    // Метод для создания нового плейлиста
     fun createPlaylist(name: String, description: String, coverPath: String?) {
         viewModelScope.launch {
             val playlist = Playlist(
@@ -26,6 +27,32 @@ class PlaylistCreateViewModel(
                 trackCount = 0
             )
             playlistsInteractor.insertPlaylist(playlist)
+            _isSaved.postValue(true)
+        }
+    }
+
+    // Метод для обновления существующего плейлиста
+    fun updatePlaylist(
+        id: Long,
+        name: String,
+        description: String,
+        coverFilePath: String?,
+        trackIds: List<Long>,
+        trackCount: Int
+    ) {
+        viewModelScope.launch {
+            val updatedPlaylist = Playlist(
+                id = id,
+                name = name,
+                description = description,
+                coverFilePath = coverFilePath,
+                trackIds = trackIds,
+                trackCount = trackCount
+            )
+            // Обновляем плейлист в БД
+            playlistsInteractor.updatePlaylist(updatedPlaylist)
+
+            // Сообщаем фрагменту, что можно закрывать экран
             _isSaved.postValue(true)
         }
     }

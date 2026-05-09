@@ -20,4 +20,17 @@ interface PlaylistDao {
 
     @Query("SELECT * FROM playlists_table ORDER BY id DESC")
     fun getPlaylists(): Flow<List<PlaylistEntity>>
+
+    // Для подписки на изменения конкретного плейлиста
+    @Query("SELECT * FROM playlists_table WHERE id = :id")
+    fun getPlaylistById(id: Long): Flow<PlaylistEntity?>
+
+    @Query("SELECT * FROM playlists_table WHERE id = :id")
+    suspend fun getPlaylistByIdSuspend(id: Long): PlaylistEntity?
+
+    @Query("SELECT * FROM playlists_table")
+    suspend fun getPlaylistsSuspend(): List<PlaylistEntity>
+
+    @Query("DELETE FROM playlists_table WHERE id = :id")
+    suspend fun deletePlaylist(id: Long)
 }
