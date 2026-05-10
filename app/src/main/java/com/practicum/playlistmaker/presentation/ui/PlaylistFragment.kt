@@ -1,10 +1,12 @@
 package com.practicum.playlistmaker.presentation.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +23,7 @@ import com.practicum.playlistmaker.presentation.adapters.TrackAdapter
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import java.io.File
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class PlaylistFragment : Fragment() {
@@ -53,7 +56,7 @@ class PlaylistFragment : Fragment() {
 
         viewModel.stateLiveData.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is PlaylistState.Loading -> Unit 
+                is PlaylistState.Loading -> Unit
                 is PlaylistState.Content -> renderContent(state.playlist, state.tracks, state.totalDurationMinutes)
             }
         }
@@ -101,7 +104,7 @@ class PlaylistFragment : Fragment() {
             val currentState = viewModel.stateLiveData.value
             if (currentState is PlaylistState.Content) {
                 val bundle = Bundle().apply {
-                    putSerializable("playlist", currentState.playlist)
+                    putLong("playlistId", currentState.playlist.id)
                 }
                 findNavController().navigate(R.id.playlistCreateFragment, bundle)
             }
@@ -112,31 +115,34 @@ class PlaylistFragment : Fragment() {
         val currentState = viewModel.stateLiveData.value
         if (currentState is PlaylistState.Content) {
             if (currentState.tracks.isEmpty()) {
-                Toast.makeText(requireContext(), "В этом плейлисте нет списка треков, которым можно поделиться", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.no_tracks_to_share), Toast.LENGTH_SHORT).show()
                 return
             }
 
             // Формируем текст сообщения
-            var shareText = "${currentState.playlist.name}\n"
+            val shareText = java.lang.StringBuilder()
+            shareText.append(currentState.playlist.name).append("\n")
+
             if (!currentState.playlist.description.isNullOrEmpty()) {
-                shareText += "${currentState.playlist.description}\n"
+                shareText.append(currentState.playlist.description).append("\n")
             }
+
             val tracksCountStr = resources.getQuantityString(R.plurals.tracks_count, currentState.playlist.trackCount, currentState.playlist.trackCount)
-            shareText += "$tracksCountStr\n"
+            shareText.append(tracksCountStr).append("\n")
 
             currentState.tracks.forEachIndexed { index, track ->
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(track.trackTime)
                 val seconds = TimeUnit.MILLISECONDS.toSeconds(track.trackTime) % 60
-                val timeString = String.format("%02d:%02d", minutes, seconds)
-                shareText += "${index + 1}. ${track.artistName} - ${track.trackName} ($timeString)\n"
+                val timeString = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+                shareText.append("${index + 1}. ${track.artistName} - ${track.trackName} ($timeString)\n")
             }
 
             // Запускаем системный диалог "поделиться"
             val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                 type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                putExtra(android.content.Intent.EXTRA_TEXT, shareText.toString())
             }
-            startActivity(android.content.Intent.createChooser(intent, "Поделиться плейлистом"))
+            startActivity(android.content.Intent.createChooser(intent, getString(R.string.share_playlist_title)))
         }
     }
 
@@ -146,11 +152,11 @@ class PlaylistFragment : Fragment() {
         val playlistName = if (currentState is PlaylistState.Content) currentState.playlist.name else ""
 
         MaterialAlertDialogBuilder(requireContext(), R.style.CustomAlertDialogTheme)
-            .setTitle("Хотите удалить плейлист «$playlistName»?")
-            .setNegativeButton("Нет") { dialog, _ ->
+            .setTitle(getString(R.string.delete_playlist_dialog_title, playlistName))
+            .setNegativeButton(getString(R.string.no)) { dialog, _ ->
                 dialog.dismiss()
             }
-            .setPositiveButton("Да") { dialog, _ ->
+            .setPositiveButton(getString(R.string.yes)) { dialog, _ ->
                 viewModel.deletePlaylist()
                 dialog.dismiss()
                 findNavController().navigateUp()
@@ -179,10 +185,7 @@ class PlaylistFragment : Fragment() {
 
         menuBottomSheetBehavior?.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                when (newState) {
-                    BottomSheetBehavior.STATE_HIDDEN -> _binding?.overlay?.visibility = View.GONE
-                    else -> _binding?.overlay?.visibility = View.VISIBLE
-                }
+                _binding?.overlay?.isVisible = newState != BottomSheetBehavior.STATE_HIDDEN
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -191,6 +194,7 @@ class PlaylistFragment : Fragment() {
         })
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun renderContent(playlist: Playlist, tracks: List<Track>, durationMinutes: String) {
         binding.playlistNameTextView.text = playlist.name
 
@@ -204,7 +208,8 @@ class PlaylistFragment : Fragment() {
         // Формируем строку
         val tracksCountStr = resources.getQuantityString(R.plurals.tracks_count, playlist.trackCount, playlist.trackCount)
         val minutesCountStr = resources.getQuantityString(R.plurals.minutes_count, durationMinutes.toIntOrNull() ?: 0, durationMinutes.toIntOrNull() ?: 0)
-        binding.playlistStatsTextView.text = "$minutesCountStr • $tracksCountStr"
+
+        binding.playlistStatsTextView.text = getString(R.string.playlist_stats, minutesCountStr, tracksCountStr)
 
         // Загрузка обложки плейлиста
         if (!playlist.coverFilePath.isNullOrEmpty()) {
@@ -252,11 +257,11 @@ class PlaylistFragment : Fragment() {
 
     private fun showDeleteTrackDialog(track: Track) {
         MaterialAlertDialogBuilder(requireContext(), R.style.CustomAlertDialogTheme)
-            .setTitle("Хотите удалить трек?")
-            .setNegativeButton("НЕТ") { dialog, _ ->
+            .setTitle(getString(R.string.delete_track_dialog_title))
+            .setNegativeButton(getString(R.string.no_caps)) { dialog, _ ->
                 dialog.dismiss()
             }
-            .setPositiveButton("ДА") { dialog, _ ->
+            .setPositiveButton(getString(R.string.yes_caps)) { dialog, _ ->
                 viewModel.deleteTrack(track.trackId)
                 dialog.dismiss()
             }

@@ -35,11 +35,9 @@
         android:label="PlaylistCreateFragment"
         tools:layout="@layout/fragment_create_playlist">
         <argument
-            android:name="playlist"
-            app:argType="com.practicum.playlistmaker.domain.models.Playlist"
-            app:nullable="true"
-            android:defaultValue="@null" />
-
+            android:name="playlistId"
+            app:argType="long"
+            android:defaultValue="0L" />
     </fragment>
 
     <fragment

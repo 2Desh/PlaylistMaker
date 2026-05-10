@@ -16,6 +16,19 @@ class PlaylistCreateViewModel(
     private val _isSaved = MutableLiveData<Boolean>()
     val isSaved: LiveData<Boolean> = _isSaved
 
+    private val _playlist = MutableLiveData<Playlist>()
+    val playlist: LiveData<Playlist> = _playlist
+
+    fun loadPlaylist(id: Long) {
+        viewModelScope.launch {
+            playlistsInteractor.getPlaylistById(id).collect { foundPlaylist ->
+                foundPlaylist?.let {
+                    _playlist.postValue(it)
+                }
+            }
+        }
+    }
+
     // Метод для создания нового плейлиста
     fun createPlaylist(name: String, description: String, coverPath: String?) {
         viewModelScope.launch {

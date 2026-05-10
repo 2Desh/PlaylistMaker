@@ -55,6 +55,7 @@ class PlaylistCreateFragment : Fragment() {
         if (uri != null) {
             selectedUri = uri
             binding.coverImageView.setImageURI(uri)
+            checkButtonState()
         }
     }
 
@@ -78,24 +79,18 @@ class PlaylistCreateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupTextWatchers()
         initEditablePlaylist()
         setupBackNavigation()
-        setupTextWatchers()
         setupClickListeners()
         observeViewModel()
     }
 
     private fun initEditablePlaylist() {
         // Получаем плейлист, если мы вернулись с экрана редактирования
-        editablePlaylist = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arguments?.getSerializable("playlist", Playlist::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            arguments?.getSerializable("playlist") as? Playlist
-        }
-
-        if (editablePlaylist != null) {
-            setupEditMode()
+        val playlistId = arguments?.getLong("playlistId", -1L) ?: -1L
+        if (playlistId != -1L) {
+            viewModel.loadPlaylist(playlistId)
         }
     }
 
@@ -107,6 +102,14 @@ class PlaylistCreateFragment : Fragment() {
         })
     }
 
+    private fun checkButtonState() {
+        val isNameFilled = !binding.nameEditText.text.isNullOrBlank()
+        binding.createButton.isEnabled = isNameFilled
+
+        val btnColorRes = if (isNameFilled) R.color.YP_Blue else R.color.YP_Text_Gray
+        binding.createButton.backgroundTintList = ContextCompat.getColorStateList(requireContext(), btnColorRes)
+    }
+
     private fun setupTextWatchers() {
         updateInputLayoutColor(binding.nameInputLayout, !binding.nameEditText.text.isNullOrBlank())
         updateInputLayoutColor(binding.descriptionInputLayout, !binding.descriptionEditText.text.isNullOrBlank())
@@ -114,13 +117,8 @@ class PlaylistCreateFragment : Fragment() {
 
         // Логика текстовых полей и кнопок
         binding.nameEditText.doOnTextChanged { text, _, _, _ ->
-            val isNameFilled = !text.isNullOrBlank()
-
-            // Кнопка
-            binding.createButton.isEnabled = isNameFilled
-            val btnColorRes = if (isNameFilled) R.color.YP_Blue else R.color.YP_Text_Gray
-            binding.createButton.backgroundTintList = ContextCompat.getColorStateList(requireContext(), btnColorRes)
-            updateInputLayoutColor(binding.nameInputLayout, isNameFilled)
+            checkButtonState()
+            updateInputLayoutColor(binding.nameInputLayout, !text.isNullOrBlank())
             updateInputLayoutColor(binding.descriptionInputLayout, !binding.descriptionEditText.text.isNullOrBlank())
         }
 
@@ -171,6 +169,11 @@ class PlaylistCreateFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        viewModel.playlist.observe(viewLifecycleOwner, Observer { playlist ->
+            editablePlaylist = playlist
+            setupEditMode()
+        })
+
         // Подписка на успешное сохранение плейлиста
         viewModel.isSaved.observe(viewLifecycleOwner, Observer { isSaved ->
             if (isSaved) {
@@ -207,6 +210,8 @@ class PlaylistCreateFragment : Fragment() {
                     .into(binding.coverImageView)
             }
         }
+
+        checkButtonState()
     }
 
     private fun checkUnsavedDataAndExit() {
@@ -220,10 +225,10 @@ class PlaylistCreateFragment : Fragment() {
 
         if (selectedUri != null || name.isNotEmpty() || description.isNotEmpty()) {
             MaterialAlertDialogBuilder(requireContext(), R.style.CustomAlertDialogTheme)
-                .setTitle("Завершить создание плейлиста?")
-                .setMessage("Все несохраненные данные будут потеряны")
-                .setNeutralButton("Отмена") { _, _ -> }
-                .setPositiveButton("Завершить") { _, _ -> findNavController().navigateUp() }
+                .setTitle(getString(R.string.finish_playlist_creation_title))
+                .setMessage(getString(R.string.finish_playlist_creation_message))
+                .setNeutralButton(getString(R.string.cancel)) { _, _ -> }
+                .setPositiveButton(getString(R.string.finish)) { _, _ -> findNavController().navigateUp() }
                 .show()
         } else {
             findNavController().navigateUp()
