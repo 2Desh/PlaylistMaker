@@ -10,4 +10,8 @@ interface FavoritePlaylistsInteractor {
     suspend fun updatePlaylist(playlist: Playlist)
     fun getPlaylists(): Flow<List<Playlist>>
     suspend fun addTrackToPlaylist(track: Track, playlist: Playlist): Boolean
+    fun getPlaylistById(id: Long): Flow<Playlist?>
+    fun getTracksForPlaylist(trackIds: List<Long>): Flow<List<Track>>
+    suspend fun deleteTrackFromPlaylist(trackId: Long, playlistId: Long)
+    suspend fun deletePlaylist(id: Long)
 }

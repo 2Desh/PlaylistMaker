@@ -8,9 +8,10 @@ import com.practicum.playlistmaker.domain.models.Track
 
 // логика отображения списка треков в recyclerview
 class TrackAdapter(
-    private val tracks: ArrayList<Track>, // Список треков
+    var tracks: ArrayList<Track>, // Список треков
     // обработчик кликов
-    private val onTrackClickListener: (Track) -> Unit
+    private val onTrackClickListener: (Track) -> Unit,
+    private val onTrackLongClickListener: ((Track) -> Boolean)? = null
 ) : RecyclerView.Adapter<TrackViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder {
@@ -26,9 +27,11 @@ class TrackAdapter(
         holder.itemView.setOnClickListener {
             onTrackClickListener.invoke(track)
         }
+
+        holder.itemView.setOnLongClickListener {
+            onTrackLongClickListener?.invoke(track) ?: false
+        }
     }
 
-    override fun getItemCount(): Int {
-        return tracks.size
-    }
+    override fun getItemCount(): Int = tracks.size
 }

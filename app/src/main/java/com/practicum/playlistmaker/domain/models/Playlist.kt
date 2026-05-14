@@ -1,4 +1,5 @@
 package com.practicum.playlistmaker.domain.models
+import java.io.Serializable
 
 // Модель плейлиста
 data class Playlist(
@@ -8,4 +9,4 @@ data class Playlist(
     val coverFilePath: String?,
     val trackIds: List<Long>,
     val trackCount: Int
-)
+) : Serializable

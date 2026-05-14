@@ -33,6 +33,21 @@
         android:id="@+id/playlistCreateFragment"
         android:name="com.practicum.playlistmaker.presentation.ui.PlaylistCreateFragment"
         android:label="PlaylistCreateFragment"
-        tools:layout="@layout/fragment_create_playlist" />
+        tools:layout="@layout/fragment_create_playlist">
+        <argument
+            android:name="playlistId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/playlistFragment"
+        android:name="com.practicum.playlistmaker.presentation.ui.PlaylistFragment"
+        android:label="PlaylistFragment"
+        tools:layout="@layout/fragment_playlist">
+        <argument
+            android:name="playlistId"
+            app:argType="long" />
+    </fragment>
 
 </navigation>

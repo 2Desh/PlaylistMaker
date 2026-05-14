@@ -23,9 +23,13 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.databinding.FragmentCreatePlaylistBinding
+import com.practicum.playlistmaker.domain.models.Playlist
 import com.practicum.playlistmaker.presentation.utils.setDebouncedOnClickListener
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.io.File
@@ -44,11 +48,14 @@ class PlaylistCreateFragment : Fragment() {
     // Счетчик отказов в разрешении
     private var permissionDeniedCount = 0
 
+    private var editablePlaylist: Playlist? = null
+
     // Запуск выбора фото
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             selectedUri = uri
             binding.coverImageView.setImageURI(uri)
+            checkButtonState()
         }
     }
 
@@ -72,38 +79,56 @@ class PlaylistCreateFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    checkUnsavedDataAndExit()
-                }
-            })
+        setupTextWatchers()
+        initEditablePlaylist()
+        setupBackNavigation()
+        setupClickListeners()
+        observeViewModel()
+    }
 
-        updateInputLayoutColor(binding.nameInputLayout, false)
-        updateInputLayoutColor(binding.descriptionInputLayout, false)
+    private fun initEditablePlaylist() {
+        // Получаем плейлист, если мы вернулись с экрана редактирования
+        val playlistId = arguments?.getLong("playlistId", -1L) ?: -1L
+        if (playlistId != -1L) {
+            viewModel.loadPlaylist(playlistId)
+        }
+    }
+
+    private fun setupBackNavigation() {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                checkUnsavedDataAndExit()
+            }
+        })
+    }
+
+    private fun checkButtonState() {
+        val isNameFilled = !binding.nameEditText.text.isNullOrBlank()
+        binding.createButton.isEnabled = isNameFilled
+
+        val btnColorRes = if (isNameFilled) R.color.YP_Blue else R.color.YP_Text_Gray
+        binding.createButton.backgroundTintList = ContextCompat.getColorStateList(requireContext(), btnColorRes)
+    }
+
+    private fun setupTextWatchers() {
+        updateInputLayoutColor(binding.nameInputLayout, !binding.nameEditText.text.isNullOrBlank())
+        updateInputLayoutColor(binding.descriptionInputLayout, !binding.descriptionEditText.text.isNullOrBlank())
         setupTextInputsHintColor()
 
         // Логика текстовых полей и кнопок
         binding.nameEditText.doOnTextChanged { text, _, _, _ ->
-            val isNameFilled = !text.isNullOrBlank()
-
-            // Кнопка
-            binding.createButton.isEnabled = isNameFilled
-            val btnColorRes = if (isNameFilled) R.color.YP_Blue else R.color.YP_Text_Gray
-            binding.createButton.backgroundTintList =
-                ContextCompat.getColorStateList(requireContext(), btnColorRes)
-
-            // Обводка
-            updateInputLayoutColor(binding.nameInputLayout, isNameFilled)
-            updateInputLayoutColor(binding.descriptionInputLayout, isNameFilled)
+            checkButtonState()
+            updateInputLayoutColor(binding.nameInputLayout, !text.isNullOrBlank())
+            updateInputLayoutColor(binding.descriptionInputLayout, !binding.descriptionEditText.text.isNullOrBlank())
         }
 
         binding.descriptionEditText.doOnTextChanged { text, _, _, _ ->
             val isDescFilled = !text.isNullOrBlank()
             updateInputLayoutColor(binding.descriptionInputLayout, isDescFilled)
         }
+    }
 
+    private fun setupClickListeners() {
         // Клик по картинке (Запрос разрешений)
         binding.coverImageView.setDebouncedOnClickListener {
             checkAndRequestImagePermission()
@@ -119,20 +144,95 @@ class PlaylistCreateFragment : Fragment() {
             val name = binding.nameEditText.text.toString()
             val description = binding.descriptionEditText.text.toString()
 
-            val imagePath = selectedUri?.let { saveImageToPrivateStorage(it) }
+            // Если новая картинка не выбрана, сохраняем старую
+            val imagePath = if (selectedUri != null) {
+                saveImageToPrivateStorage(selectedUri!!)
+            } else {
+                editablePlaylist?.coverFilePath
+            }
 
-            viewModel.createPlaylist(name, description, imagePath)
+            if (editablePlaylist == null) {
+                // Режим создания
+                viewModel.createPlaylist(name, description, imagePath)
+            } else {
+                // Режим редактирования
+                viewModel.updatePlaylist(
+                    id = editablePlaylist!!.id,
+                    name = name,
+                    description = description,
+                    coverFilePath = imagePath,
+                    trackIds = editablePlaylist!!.trackIds,
+                    trackCount = editablePlaylist!!.trackCount
+                )
+            }
         }
+    }
+
+    private fun observeViewModel() {
+        viewModel.playlist.observe(viewLifecycleOwner, Observer { playlist ->
+            editablePlaylist = playlist
+            setupEditMode()
+        })
 
         // Подписка на успешное сохранение плейлиста
         viewModel.isSaved.observe(viewLifecycleOwner, Observer { isSaved ->
             if (isSaved) {
-                val name = binding.nameEditText.text.toString()
-                val message = getString(R.string.playlist_created, name)
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                if (editablePlaylist == null) {
+                    val name = binding.nameEditText.text.toString()
+                    val message = getString(R.string.playlist_created, name)
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                }
                 findNavController().navigateUp()
             }
         })
+    }
+
+    private fun setupEditMode() {
+        // Меняем заголовок и кнопку для режима редактирования
+        binding.screenTitle.text = "Редактировать"
+        binding.createButton.text = "Сохранить"
+
+        // Подставляем существующие данные
+        binding.nameEditText.setText(editablePlaylist?.name)
+        binding.descriptionEditText.setText(editablePlaylist?.description)
+
+        // Загружаем обложку
+        val coverPath = editablePlaylist?.coverFilePath
+        if (!coverPath.isNullOrEmpty()) {
+            val file = File(coverPath)
+            if (file.exists()) {
+                Glide.with(this)
+                    .load(file)
+                    .transform(
+                        CenterCrop(),
+                        RoundedCorners(resources.getDimensionPixelSize(R.dimen.cover_corner_radius))
+                    )
+                    .into(binding.coverImageView)
+            }
+        }
+
+        checkButtonState()
+    }
+
+    private fun checkUnsavedDataAndExit() {
+        if (editablePlaylist != null) {
+            findNavController().navigateUp()
+            return
+        }
+
+        val name = binding.nameEditText.text?.toString().orEmpty()
+        val description = binding.descriptionEditText.text?.toString().orEmpty()
+
+        if (selectedUri != null || name.isNotEmpty() || description.isNotEmpty()) {
+            MaterialAlertDialogBuilder(requireContext(), R.style.CustomAlertDialogTheme)
+                .setTitle(getString(R.string.finish_playlist_creation_title))
+                .setMessage(getString(R.string.finish_playlist_creation_message))
+                .setNeutralButton(getString(R.string.cancel)) { _, _ -> }
+                .setPositiveButton(getString(R.string.finish)) { _, _ -> findNavController().navigateUp() }
+                .show()
+        } else {
+            findNavController().navigateUp()
+        }
     }
 
     private fun updateInputLayoutColor(inputLayout: com.google.android.material.textfield.TextInputLayout, isFilled: Boolean) {
@@ -214,22 +314,6 @@ class PlaylistCreateFragment : Fragment() {
         } catch (e: Exception) {
             e.printStackTrace()
             null
-        }
-    }
-
-    private fun checkUnsavedDataAndExit() {
-        val name = binding.nameEditText.text?.toString().orEmpty()
-        val description = binding.descriptionEditText.text?.toString().orEmpty()
-
-        if (selectedUri != null || name.isNotEmpty() || description.isNotEmpty()) {
-            MaterialAlertDialogBuilder(requireContext(), R.style.CustomAlertDialogTheme)
-                .setTitle("Завершить создание плейлиста?")
-                .setMessage("Все несохраненные данные будут потеряны")
-                .setNeutralButton("Отмена") { _, _ -> }
-                .setPositiveButton("Завершить") { _, _ -> findNavController().navigateUp() }
-                .show()
-        } else {
-            findNavController().navigateUp()
         }
     }
 

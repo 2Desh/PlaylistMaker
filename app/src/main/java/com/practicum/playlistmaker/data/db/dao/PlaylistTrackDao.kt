@@ -17,4 +17,8 @@ interface PlaylistTrackDao {
     // Получение треков по списку ID
     @Query("SELECT * FROM playlist_tracks_table")
     suspend fun getAllTracks(): List<PlaylistTrackEntity>
+
+    // Удаление трека из таблицы всех треков плейлистов
+    @Query("DELETE FROM playlist_tracks_table WHERE trackId = :trackId")
+    suspend fun deleteTrack(trackId: String)
 }

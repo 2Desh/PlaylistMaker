@@ -32,8 +32,18 @@ class PlaylistsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // TODO
-        adapter = PlaylistAdapter(emptyList()) { _ ->
+        // Переход на экран деталей плейлиста
+        adapter = PlaylistAdapter(emptyList()) { playlist ->
+            val bundle = Bundle().apply {
+                putLong("playlistId", playlist.id)
+            }
+            findNavController().navigate(R.id.playlistFragment, bundle)
+        }
+        adapter = PlaylistAdapter(emptyList()) { playlist ->
+            val bundle = Bundle().apply {
+                putLong("playlistId", playlist.id)
+            }
+            findNavController().navigate(R.id.playlistFragment, bundle)
         }
 
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
