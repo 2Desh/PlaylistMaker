@@ -1,5 +1,6 @@
 package com.practicum.playlistmaker.presentation.ui
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -120,6 +121,7 @@ class PlayerFragment : Fragment() {
         binding.playlistsBottomSheetRecyclerView.adapter = bottomSheetAdapter
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun observeViewModel() {
         // Подписка на состояния плеера
         viewModel.stateLiveData.observe(viewLifecycleOwner) { state ->
@@ -193,20 +195,20 @@ class PlayerFragment : Fragment() {
         when (state) {
             is PlayerState.Default -> {
                 binding.playPauseButton.isEnabled = false
-                binding.playPauseButton.setImageResource(R.drawable.ic_play)
+                binding.playPauseButton.setState(false)
                 binding.playbackProgressTextView.text = state.progress
             }
             is PlayerState.Prepared -> {
                 binding.playPauseButton.isEnabled = true
-                binding.playPauseButton.setImageResource(R.drawable.ic_play)
+                binding.playPauseButton.setState(false)
                 binding.playbackProgressTextView.text = state.progress
             }
             is PlayerState.Playing -> {
-                binding.playPauseButton.setImageResource(R.drawable.ic_pause)
+                binding.playPauseButton.setState(true)
                 binding.playbackProgressTextView.text = state.progress
             }
             is PlayerState.Paused -> {
-                binding.playPauseButton.setImageResource(R.drawable.ic_play)
+                binding.playPauseButton.setState(false)
                 binding.playbackProgressTextView.text = state.progress
             }
         }
