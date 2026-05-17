@@ -5,11 +5,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.practicum.playlistmaker.R
-import com.practicum.playlistmaker.domain.api.AudioPlayerInteractor
 import com.practicum.playlistmaker.domain.api.FavoritePlaylistsInteractor
 import com.practicum.playlistmaker.domain.api.FavoriteTracksInteractor
 import com.practicum.playlistmaker.domain.models.Playlist
 import com.practicum.playlistmaker.domain.models.Track
+import com.practicum.playlistmaker.presentation.service.AudioPlayerControl
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -19,12 +19,11 @@ import java.util.Locale
 
 // Вьювка плеера. Инкапсулирует логику воспроизведения, управление таймером прогресса и форматирование времени.
 class PlayerViewModel(
-    private val audioPlayerInteractor: AudioPlayerInteractor,
     private val favoriteTracksInteractor: FavoriteTracksInteractor,
     private val playlistsInteractor: FavoritePlaylistsInteractor
 ) : ViewModel() {
 
-    private val _stateLiveData = MutableLiveData<PlayerState>(PlayerState.Default(formatTime(DEFAULT_TIME)))
+    private val _stateLiveData = MutableLiveData<PlayerState>(PlayerState.Default("00:00"))
     val stateLiveData: LiveData<PlayerState> = _stateLiveData
 
     private val _isFavorite = MutableLiveData<Boolean>()
@@ -40,8 +39,9 @@ class PlayerViewModel(
     val toastMessage: LiveData<Pair<Int, String>?> = _toastMessage
 
     private var timerJob: Job? = null
-
     private var currentTrackId: Long? = null
+
+    private var audioPlayerControl: AudioPlayerControl? = null
 
     init {
         viewModelScope.launch {
@@ -52,6 +52,23 @@ class PlayerViewModel(
         }
     }
 
+    fun setAudioPlayerControl(control: AudioPlayerControl) {
+        audioPlayerControl = control
+        control.setOnStateChangeListener { state ->
+            _stateLiveData.postValue(state)
+            if (state is PlayerState.Playing) {
+                startTimer()
+            } else {
+                timerJob?.cancel()
+            }
+        }
+    }
+
+    fun removeAudioPlayerControl() {
+        audioPlayerControl?.setOnStateChangeListener(null)
+        audioPlayerControl = null
+    }
+
     fun setTrackId(trackId: Long) {
         currentTrackId = trackId
         checkTrackInPlaylists(_playlistsLiveData.value)
@@ -59,51 +76,25 @@ class PlayerViewModel(
 
     private fun checkTrackInPlaylists(playlists: List<Playlist>?) {
         if (playlists == null || currentTrackId == null) return
-
         val isAdded = playlists.any { it.trackIds.contains(currentTrackId) }
         _isAddedToPlaylist.postValue(isAdded)
-    }
-
-    fun preparePlayer(url: String) {
-        if (_stateLiveData.value !is PlayerState.Default) return
-
-        audioPlayerInteractor.preparePlayer(
-            url = url,
-            onPreparedListener = {
-                _stateLiveData.postValue(PlayerState.Prepared(formatTime(DEFAULT_TIME)))
-            },
-            onCompletionListener = {
-                timerJob?.cancel()
-                _stateLiveData.postValue(PlayerState.Prepared(formatTime(DEFAULT_TIME)))
-            }
-        )
-    }
-
-    private fun startPlayer() {
-        audioPlayerInteractor.startPlayer()
-        _stateLiveData.postValue(PlayerState.Playing(formatTime(audioPlayerInteractor.getCurrentPosition())))
-        startTimer()
-    }
-
-    fun pausePlayer() {
-        audioPlayerInteractor.pausePlayer()
-        timerJob?.cancel()
-
-        val currentProgress = if (_stateLiveData.value is PlayerState.Playing) {
-            (_stateLiveData.value as PlayerState.Playing).progress
-        } else {
-            formatTime(DEFAULT_TIME)
-        }
-        _stateLiveData.postValue(PlayerState.Paused(currentProgress))
     }
 
     // Обработка нажатия на кнопку Play/Pause
     fun playbackControl() {
         when (_stateLiveData.value) {
-            is PlayerState.Playing -> pausePlayer()
-            is PlayerState.Prepared, is PlayerState.Paused -> startPlayer()
+            is PlayerState.Playing -> audioPlayerControl?.pausePlayer()
+            is PlayerState.Prepared, is PlayerState.Paused -> audioPlayerControl?.startPlayer()
             else -> Unit
         }
+    }
+
+    fun onAppBackgrounded() {
+        audioPlayerControl?.showNotification()
+    }
+
+    fun onAppForegrounded() {
+        audioPlayerControl?.hideNotification()
     }
 
     private fun startTimer() {
@@ -111,7 +102,8 @@ class PlayerViewModel(
         timerJob = viewModelScope.launch {
             while (isActive) {
                 delay(DELAY)
-                _stateLiveData.postValue(PlayerState.Playing(formatTime(audioPlayerInteractor.getCurrentPosition())))
+                val currentPos = audioPlayerControl?.getCurrentPosition() ?: 0
+                _stateLiveData.postValue(PlayerState.Playing(formatTime(currentPos)))
             }
         }
     }
@@ -148,18 +140,11 @@ class PlayerViewModel(
         _toastMessage.value = null
     }
 
-    // Освобождаем ресурсы
-    override fun onCleared() {
-        super.onCleared()
-        audioPlayerInteractor.release()
-    }
-
     private fun formatTime(timeMillis: Int): String {
         return SimpleDateFormat("mm:ss", Locale.getDefault()).format(timeMillis)
     }
 
     companion object {
         private const val DELAY = 300L
-        private const val DEFAULT_TIME = 0
     }
 }
