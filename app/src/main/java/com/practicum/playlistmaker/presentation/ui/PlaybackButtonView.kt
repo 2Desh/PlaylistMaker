@@ -1,21 +1,18 @@
 package com.practicum.playlistmaker.presentation.ui
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.graphics.RectF
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.AttrRes
-import androidx.annotation.ColorInt
 import androidx.annotation.StyleRes
 import androidx.core.content.ContextCompat
 import com.practicum.playlistmaker.R
-import androidx.core.graphics.createBitmap
 
 // Кнопка Играть/Пауза на экране плеера
 class PlaybackButtonView @JvmOverloads constructor(
@@ -25,9 +22,8 @@ class PlaybackButtonView @JvmOverloads constructor(
     @StyleRes defStyleRes: Int = 0
 ) : View(context, attrs, defStyleAttr, defStyleRes) {
 
-    private var playBitmap: Bitmap? = null
-    private var pauseBitmap: Bitmap? = null
-    private val imageRect = RectF()
+    private var playDrawable: Drawable? = null
+    private var pauseDrawable: Drawable? = null
 
     var isPlaying: Boolean = false
         private set
@@ -53,10 +49,17 @@ class PlaybackButtonView @JvmOverloads constructor(
                 val pauseImageResId = getResourceId(R.styleable.PlaybackButtonView_pauseImage, 0)
 
                 if (playImageResId != 0) {
-                    playBitmap = getBitmapFromVectorDrawable(context, playImageResId, tintColor)
+                    playDrawable = ContextCompat.getDrawable(context, playImageResId)?.apply {
+                        mutate()
+                        colorFilter = PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN)
+                    }
                 }
+
                 if (pauseImageResId != 0) {
-                    pauseBitmap = getBitmapFromVectorDrawable(context, pauseImageResId, tintColor)
+                    pauseDrawable = ContextCompat.getDrawable(context, pauseImageResId)?.apply {
+                        mutate()
+                        colorFilter = PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN)
+                    }
                 }
             } finally {
                 recycle()
@@ -66,17 +69,13 @@ class PlaybackButtonView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        imageRect.left = 0f
-        imageRect.top = 0f
-        imageRect.right = w.toFloat()
-        imageRect.bottom = h.toFloat()
+        playDrawable?.setBounds(0, 0, w, h)
+        pauseDrawable?.setBounds(0, 0, w, h)
     }
 
     override fun onDraw(canvas: Canvas) {
-        val bitmapToDraw = if (isPlaying) pauseBitmap else playBitmap
-        if (bitmapToDraw != null) {
-            canvas.drawBitmap(bitmapToDraw, null, imageRect, null)
-        }
+        val drawableToDraw = if (isPlaying) pauseDrawable else playDrawable
+        drawableToDraw?.draw(canvas)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -106,20 +105,5 @@ class PlaybackButtonView @JvmOverloads constructor(
             isPlaying = playing
             invalidate()
         }
-    }
-
-    private fun getBitmapFromVectorDrawable(context: Context, drawableId: Int, @ColorInt tint: Int): Bitmap? {
-        val drawable = ContextCompat.getDrawable(context, drawableId) ?: return null
-
-        drawable.mutate()
-        drawable.colorFilter = PorterDuffColorFilter(tint, PorterDuff.Mode.SRC_IN)
-
-        val bitmap = createBitmap(drawable.intrinsicWidth.takeIf { it > 0 } ?: 1,
-            drawable.intrinsicHeight.takeIf { it > 0 } ?: 1)
-        val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
-        drawable.draw(canvas)
-
-        return bitmap
     }
 }
