@@ -91,19 +91,18 @@
                 app:layout_constraintTop_toBottomOf="@id/artistNameTextView">
 
                 <!-- Играть/Пауза -->
-                <ImageView
+                <com.practicum.playlistmaker.presentation.ui.PlaybackButtonView
                     android:id="@+id/playPauseButton"
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:layout_marginTop="28dp"
                     android:contentDescription="@string/play_pause_button_description"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_play"
+                    app:playImage="@drawable/ic_play"
+                    app:pauseImage="@drawable/ic_pause"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tint="@color/playerButtonPlayColor" />
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <!-- Добавить в плейлист -->
                 <ImageView
