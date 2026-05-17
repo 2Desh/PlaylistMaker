@@ -1,12 +1,21 @@
 package com.practicum.playlistmaker.presentation.ui
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
@@ -16,6 +25,7 @@ import com.practicum.playlistmaker.R
 import com.practicum.playlistmaker.databinding.FragmentAudioplayerBinding
 import com.practicum.playlistmaker.domain.models.Track
 import com.practicum.playlistmaker.presentation.adapters.BottomSheetPlaylistAdapter
+import com.practicum.playlistmaker.presentation.service.AudioPlayerService
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -31,6 +41,26 @@ class PlayerFragment : Fragment() {
     private var currentTrack: Track? = null
     private var bottomSheetAdapter: BottomSheetPlaylistAdapter? = null
 
+    // Соединения с сервисом
+    private var isBound = false
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as AudioPlayerService.AudioPlayerBinder
+            viewModel.setAudioPlayerControl(binder.getService())
+            isBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            viewModel.removeAudioPlayerControl()
+            isBound = false
+        }
+    }
+
+    // Запрос разрешений для Андроид 13+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ -> }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -42,6 +72,7 @@ class PlayerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        checkNotificationPermission()
         initViews()
         setupBottomSheet()
 
@@ -61,13 +92,49 @@ class PlayerFragment : Fragment() {
 
             viewModel.setTrackId(track.trackId)
 
-            val url = track.previewUrl
-            if (!url.isNullOrEmpty()) {
-                viewModel.preparePlayer(url)
-            }
+            // Привязываемся к сервису, передавая информацию о треке
+            bindAudioService(track)
         }
 
         observeViewModel()
+    }
+
+    private fun checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun bindAudioService(track: Track) {
+        val intent = Intent(requireContext(), AudioPlayerService::class.java).apply {
+            putExtra("URL", track.previewUrl)
+            putExtra("TITLE", track.trackName)
+            putExtra("ARTIST", track.artistName)
+        }
+        requireContext().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.onAppForegrounded()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.onAppBackgrounded()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        if (isBound) {
+            viewModel.removeAudioPlayerControl()
+            requireContext().unbindService(serviceConnection)
+            isBound = false
+        }
+        _binding = null
+        bottomSheetAdapter = null
     }
 
     private fun initViews() {
@@ -212,17 +279,6 @@ class PlayerFragment : Fragment() {
                 binding.playbackProgressTextView.text = state.progress
             }
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        viewModel.pausePlayer()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-        bottomSheetAdapter = null
     }
 
     companion object {
